@@ -1,0 +1,35 @@
+<html>
+    <head>
+        <link href={{ .css }} rel="stylesheet" type="text/css">
+    </head>
+    <body>
+        <div class="MainPage">
+            <video id="background-video" preload="auto" no-controls autoplay loop playsinline muted height="100%" width="100%">
+                <source src="../../styles/marsVideo.mp4">
+            </video>
+            <div class="cont">
+                {{template "navbar" .}}
+                <div class="welcome">
+                    <h1>bringing mars <br> samples to earth</h1>
+                    <a href="/services"><button>go to samples</button></a>
+                </div>
+                <div class="facts">
+                    <div class="fact">
+                        <h2>collected</h2>
+                        <p>20 samples</p>
+                    </div>
+                    <div class="fact">
+                        <h2>Planned launches</h2>
+                        <p>in 2027</p>
+                    </div>
+                    <div class="fact">
+                        <h2>Expected to arrive on Earth</h2>
+                        <p>in 2033</p>
+                    </div>
+                </div>
+                <a href="#"><button class="more"></button></a>
+            </div>
+           
+        </div>
+    </body>
+</html>

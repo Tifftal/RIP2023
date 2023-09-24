@@ -1,0 +1,30 @@
+<html>
+    <head>
+        <link href={{ .css }} rel="stylesheet" type="text/css">
+        {{template "navbar" .}}
+    </head>
+    <body>
+        <div>
+            <div class="body">
+            <a class="back" href="/services/{{.Prev.Id}}"><img src="../../styles/Next.png"/><button>Back</button></a>
+                <iframe src='{{.Sample.UrlVideo }}' scrolling='no' frameborder='0'></iframe>
+                <div class="info">
+                    <div class="title">
+                        <h2> {{ .Sample.Name }} </h2>
+                        <h3>No.{{ .Sample.Id }}</h3> 
+                    </div>
+                    <div class="info-body">
+                        <p><b>Sample Type:</b>  {{ .Sample.Type }}</p>
+                        <p><b>Sol Sealed:</b>  {{ .Sample.SolSealed }}</p>
+                        <p><b>Date Sealed:</b>  {{ .Sample.DateSealed }}</p>
+                        <p><b>Rock Type:</b>  {{ .Sample.RockType }}</p>
+                        <p><b>Sample Height:</b>  {{ .Sample.SampleHeight }}</p>
+                        <p><b>Curent Location:</b>  {{ .Sample.CurrentLocation }}</p>
+                    </div>
+                </div>
+                <a class="next" href="/services/{{.Next.Id}}"><button>Next</button><img src="../../styles/Next.png"/></a>
+            </div>
+        </div>
+    </body>
+    
+</html>
