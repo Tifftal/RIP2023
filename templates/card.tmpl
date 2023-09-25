@@ -1,0 +1,20 @@
+{{define "card"}}
+    
+    <div class="card">
+        <div class="card-body">
+            <img class="img-sample" src={{ .Image }}/>
+            <div class="card-inf">
+                <h2> {{ .Name }} </h2>
+                <h3>No.{{ .Id_sample }}</h3> 
+                <span></span>
+                <p><b>Sample Type:</b>  {{ .Type }}</p>
+                <p><b>Sol Sealed:</b>  {{ .Sol_Sealed }}</p>
+                <p><b>Date Sealed:</b>  {{ .Date_Sealed }}</p>
+                <p><b>Rock Type:</b>  {{ .Rock_Type }}</p>
+                <p><b>Sample Height:</b>  {{ .Height }}</p>
+                <p><b>Curent Location:</b>  {{ .Current_Location }}</p>
+            </div>
+        </div>
+    </div>
+
+{{end}}
