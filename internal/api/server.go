@@ -138,29 +138,6 @@ func StartServer() {
 		})
 	})
 
-	// r.GET("/services/:id", func(c *gin.Context) {
-	// 	id, err := strconv.Atoi(c.Param("id"))
-	// 	if err != nil || id < 1 || id > len(samples) {
-	// 		log.Println("error")
-	// 		c.HTML(http.StatusOK, "info.tmpl", gin.H{
-	// 			"css":    "/styles/info.css",
-	// 			"Sample": nil,
-	// 		})
-	// 		return
-	// 	}
-
-	// 	sample := samples[id-1]
-	// 	var next Sample
-	// 	if id < len(samples) {
-	// 		next = samples[id]
-	// 	}
-
-	// 	c.HTML(http.StatusOK, "info.tmpl", gin.H{
-	// 		"css":    "/styles/info.css",
-	// 		"Sample": sample,
-	// 		"Next":   next,
-	// 	})
-	// })
 	r.GET("/services/:id", func(c *gin.Context) {
 		id, err := strconv.Atoi(c.Param("id"))
 		if err != nil {
@@ -208,11 +185,12 @@ func StartServer() {
 				foundSample = append(foundSample, sample)
 			}
 		}
-		data := gin.H{
-			"css":    "/styles/test.css",
-			"Sample": foundSample,
-		}
-		c.HTML(http.StatusOK, "test.tmpl", data)
+		c.HTML(http.StatusOK, "services.tmpl", gin.H{
+			"css":      "/styles/services.css",
+			"Services": foundSample,
+			"Search":   searchQuery,
+		})
+
 	})
 
 	r.Run()

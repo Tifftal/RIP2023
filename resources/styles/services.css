@@ -40,6 +40,13 @@ html {
     justify-content: center;
 }
 
+.search label {
+    color: rgba(255, 255, 255, 0.5);
+    margin: 2% 1%;
+    font-family: "Montserrat-light";
+    font-size: 120%;
+}
+
 .navbar input {
     background: none;
     border: none;
