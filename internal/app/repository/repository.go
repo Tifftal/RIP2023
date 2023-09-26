@@ -25,7 +25,7 @@ func New(dsn string) (*Repository, error) {
 func (repository *Repository) GetSampleByID(id int) (*ds.Samples, error) {
 	sample := &ds.Samples{}
 
-	err := repository.db.First(sample, "Id_sample = ?", "1").Error // find alpinist with code D42
+	err := repository.db.First(sample, "Id_sample = ?", id).Error // find alpinist with code D42
 	if err != nil {
 		return nil, err
 	}

@@ -6,23 +6,24 @@
     <body>
         <div>
             <div class="body">
-            <a class="back" href="/services/{{.Prev.Id}}"><img src="../../styles/Next.png"/><button>Back</button></a>
-                <iframe src='{{.Sample.UrlVideo }}' scrolling='no' frameborder='0'></iframe>
+            <a class="back" href="/services/{{.Prev.Id_sample}}"><img src="../../styles/Next.png"/><button>Back</button></a>
+                <iframe src='{{.Sample.Video }}' scrolling='no' frameborder='0'></iframe>
                 <div class="info">
                     <div class="title">
                         <h2> {{ .Sample.Name }} </h2>
-                        <h3>No.{{ .Sample.Id }}</h3> 
+                        <h3>No.{{ .Sample.Id_sample }}</h3> 
                     </div>
                     <div class="info-body">
                         <p><b>Sample Type:</b>  {{ .Sample.Type }}</p>
-                        <p><b>Sol Sealed:</b>  {{ .Sample.SolSealed }}</p>
-                        <p><b>Date Sealed:</b>  {{ .Sample.DateSealed }}</p>
-                        <p><b>Rock Type:</b>  {{ .Sample.RockType }}</p>
-                        <p><b>Sample Height:</b>  {{ .Sample.SampleHeight }}</p>
-                        <p><b>Curent Location:</b>  {{ .Sample.CurrentLocation }}</p>
+                        <p><b>Sol Sealed:</b>  {{ .Sample.Sol_Sealed }}</p>
+                        <p><b>Date Sealed:</b>  {{ .Sample.Date_Sealed }}</p>
+                        <p><b>Rock Type:</b>  {{ .Sample.Rock_Type }}</p>
+                        <p><b>Sample Height:</b>  {{ .Sample.Height }}</p>
+                        <p><b>Curent Location:</b>  {{ .Sample.Current_Location }}</p>
+                        <p><b>Status:</b>  {{ .Sample.Sample_status }}</p>
                     </div>
                 </div>
-                <a class="next" href="/services/{{.Next.Id}}"><button>Next</button><img src="../../styles/Next.png"/></a>
+                <a class="next" href="/services/{{.Next.Id_sample}}"><button>Next</button><img src="../../styles/Next.png"/></a>
             </div>
         </div>
     </body>

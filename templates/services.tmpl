@@ -10,7 +10,8 @@
             <p>NASA's Mars Perseverance rover is building a unique rock collection, which also includes samples of Mars atmosphere and loose surface material. These samples record the history of the Jezero Crater landing site, and may even preserve signs of ancient life. Learn more about these precious samples, which Mars Sample Return could deliver to Earth for detailed study in the future.</p>
             <div class="search">
                 <form action="/search" method="GET" type="submit" class="search">
-                    <input type="text" id="searchQuery" name="q" placeholder="Search..."></input>
+                    <label>Search:</label>
+                    <input type="text" id="searchQuery" name="q" placeholder="{{.Search}}"></input>
                 </form>
             </div>
             <div class="scroll">
@@ -18,7 +19,7 @@
                 <img src="../../styles/стрелка.gif">
             </div>
             <div class="samples">
-                {{ range .Services }}
+                {{ range .Services}}
                     <a href="/services/{{.Id_sample}}">
                         {{template "card" .}}
                     </a>
