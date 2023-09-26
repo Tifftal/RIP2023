@@ -25,7 +25,7 @@ func New(dsn string) (*Repository, error) {
 func (repository *Repository) GetSampleByID(id int) (*ds.Samples, error) {
 	sample := &ds.Samples{}
 
-	err := repository.db.First(sample, "Id_sample = ?", id).Error // find alpinist with code D42
+	err := repository.db.First(sample, "Id_sample = ?", id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -35,10 +35,19 @@ func (repository *Repository) GetSampleByID(id int) (*ds.Samples, error) {
 
 func (repository *Repository) GetAllSamples() ([]ds.Samples, error) {
 	sample := []ds.Samples{}
-	err := repository.db.Find(&sample).Error
+	err := repository.db.Order("Sample_status ASC").Order("Id_sample ASC").Find(&sample).Error
 	if err != nil {
 		return nil, err
 	}
 
 	return sample, nil
+}
+
+func (repository *Repository) GetSampleByName(name string) ([]ds.Samples, error) {
+	var samples []ds.Samples
+	err := repository.db.Where("Name LIKE ?", "%"+name+"%").Order("Sample_status ASC").Order("Id_sample ASC").Find(&samples).Error
+	if err != nil {
+		return nil, err
+	}
+	return samples, nil
 }

@@ -26,16 +26,6 @@ func (a *Application) StartServer() {
 		})
 	})
 
-	router.GET("/", func(context *gin.Context) {
-		sample, err := a.repository.GetSampleByID(2)
-		if err != nil {
-			log.Println("Error with running\nServer down")
-			return
-		}
-
-		context.JSON(200, sample)
-	})
-
 	router.GET("/services", func(c *gin.Context) {
 		sample, err := a.repository.GetAllSamples()
 		if err != nil {
@@ -102,6 +92,88 @@ func (a *Application) StartServer() {
 			"Prev":   prev,
 		})
 
+	})
+
+	router.GET("/search", func(c *gin.Context) {
+		searchQuery := c.DefaultQuery("q", "")
+
+		samples, err := a.repository.GetSampleByName(searchQuery)
+		if err != nil {
+			log.Println("Error with running\nServer down")
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
+		if searchQuery == "" {
+			samples, err = a.repository.GetAllSamples()
+			if err != nil {
+				log.Println("Error with running\nServer down")
+				return
+			}
+		}
+		for i := 0; i < len(samples); i++ {
+			samples[i].Date_Sealed = samples[i].Date_Sealed[:10]
+		}
+
+		c.HTML(http.StatusOK, "services.tmpl", gin.H{
+			"css":      "/styles/services.css",
+			"Services": samples,
+			"Search":   searchQuery,
+		})
+
+	})
+
+	router.GET("/employee_mode", func(c *gin.Context) {
+		sample, err := a.repository.GetAllSamples()
+		if err != nil {
+			log.Println("Error with running\nServer down")
+			return
+		}
+		// c.JSON(200, sample)
+		for i := 0; i < len(sample); i++ {
+			sample[i].Date_Sealed = sample[i].Date_Sealed[:10]
+		}
+
+		c.HTML(http.StatusOK, "employee_mode.tmpl", gin.H{
+			"css":      "/styles/employee_mode.css",
+			"Services": sample,
+		})
+	})
+
+	router.GET("/search_empl", func(c *gin.Context) {
+		searchQuery := c.DefaultQuery("q", "")
+
+		samples, err := a.repository.GetSampleByName(searchQuery)
+		if err != nil {
+			log.Println("Error with running\nServer down")
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
+		if searchQuery == "" {
+			samples, err = a.repository.GetAllSamples()
+			if err != nil {
+				log.Println("Error with running\nServer down")
+				return
+			}
+		}
+
+		for i := 0; i < len(samples); i++ {
+			samples[i].Date_Sealed = samples[i].Date_Sealed[:10]
+		}
+
+		c.HTML(http.StatusOK, "employee_mode.tmpl", gin.H{
+			"css":      "/styles/employee_mode.css",
+			"Services": samples,
+			"Search":   searchQuery,
+		})
+
+	})
+
+	router.GET("/add", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "addSample.tmpl", gin.H{
+			"css": "/styles/addSample.css",
+		})
 	})
 
 	err := router.Run()

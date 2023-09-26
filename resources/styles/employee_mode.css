@@ -28,6 +28,7 @@ html {
     overflow-x: hidden;
     width: 100vw;
     height: auto;
+    overflow-y: auto;
 }
 
 .navbar form {
@@ -38,13 +39,6 @@ html {
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.search label {
-    color: rgba(255, 255, 255, 0.5);
-    margin: 2% 1%;
-    font-family: "Montserrat-light";
-    font-size: 120%;
 }
 
 .navbar input {
@@ -138,142 +132,14 @@ html {
     padding: 0;
 }
 
-.services h1 {
-    font-family: "Montserrat-regular";
-    text-align: center;
-    margin: 4% 10% 2% 10%;
-}
-
-.services p {
-    font-family: "Montserrat-extralight";
-    text-align: left;
-    margin: 1% 10% 2% 10%;
-    font-size: 110%;
-}
-
-.scroll {
-    margin: 4% 0 1% 0;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    gap: 0;
-}
-
-.scroll p {
-    margin: 0 1%;
-    padding: 0;
-    font-family: "Montserrat-light";
-    font-size: 100%;
-    color: rgba(0, 0, 0, 0.5);
-}
-
-.scroll img {
-    width: 20px;
-    padding: 0;
-    margin: 0;
-    z-index: 0;
-    opacity: 0.5;
-}
-
-.samples {
+.absolute-search {
     position: absolute;
-    left: -0.5vw;
-    width: 101vw;
-    height: 52vh;
-    overflow: hidden;
-    overflow-x: scroll;
-    white-space: nowrap;
-    padding: 1% 2%;
-}
-
-.samples a {
-    text-decoration: none;
-}
-
-.samples::-webkit-scrollbar {
-    width: 0;
-}
-
-.card {
-    display: inline-block;
-    width: 80vh;
-    height: 50vh;
-    border-radius: 20px;
-    background-color: whitesmoke;
-    text-align: center;
-    margin: 0 1%;
-    box-shadow: 2px 2px 10px rgb(75, 36, 0, 0.2);
-    transition: .3s;
-}
-
-.card:hover {
-    transform: scale(1.015);
-}
-
-.card-body {
-    height: 50vh;
-    padding: 0 3%;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-}
-
-.img-sample {
-    object-fit: cover;
-    width: 35vh;
-    height: 45vh;
-    margin: 0;
-    padding: 0;
-    border-radius: 15px;
-}
-
-.card-inf {
-    display: flex;
-    flex-direction: column;
-    margin: 5% 4%;
-    align-items: flex-start;
-    justify-content: flex-start;
-    align-self: flex-start;
-}
-
-.card-inf h2 {
-    color: black;
-    font-family: "Montserrat-semibold";
-    margin: 0;
-    padding: 0;
-    font-size: 140%;
-}
-
-.card-inf h3 {
-    color: black;
-    font-family: "Montserrat-light";
-    margin: 5% 0;
-    padding: 0;
-    font-size: 100%;
-}
-
-.card-inf span {
-    border: 0.7px solid rgba(0, 0, 0, 0.5);
-    width: 36vh;
-    margin: 0 0 7% 0;
-}
-
-.card-inf p {
-    color: black;
-    font-family: "Montserrat-regular";
-    margin: 3% 0;
-    padding: 0;
-    font-size: 100%;
-}
-
-.card-inf b {
-    color: #875F4B;
-    font-family: "Montserrat-medium";
+    top: 20vh;
+    width: 100%;
 }
 
 .search {
-    background-color: rgb(126, 145, 151);
+    top: 25vh;
     margin: 0;
     padding: 0;
     width: 100%;
@@ -289,10 +155,18 @@ html {
     font-family: "Montserrat-semibold";
     font-size: 100%;
     text-decoration: none;
-    background-color:rgb(55, 93, 105);
+    background-color: rgb(55, 93, 105);
     border-radius: 10px;
     padding: 1%;
     white-space: nowrap;
+
+}
+
+.search label {
+    color: rgba(255, 255, 255);
+    margin: 2% 1%;
+    font-family: "Montserrat-light";
+    font-size: 120%;
 }
 
 .search form {
@@ -310,14 +184,14 @@ html {
     padding: 1%;
     width: 20vw;
     height: 5vh;
-    color: white;
+    color: rgb(255, 255, 255);
     font-size: 120%;
     font-family: "Montserrat-light";
     border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .search input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255, 255, 255);
     text-align: center;
 }
 
@@ -325,4 +199,93 @@ html {
     backdrop-filter: blur(3px);
     -webkit-backdrop-filter: blur(3px);
     outline: none;
+}
+
+.Add-Sort-Btn {
+    margin-top: 1%;
+}
+
+.Add-Sort-Btn a {
+    padding: 0;
+    margin: 0;
+}
+
+.AddBtn {
+    background-color: rgb(55, 140, 49);
+    border: none;
+    padding: 0.5% 1.5%;
+    border-radius: 10px;
+    color: rgba(255, 255, 255);
+    margin: 1%;
+    font-family: "Montserrat-regular";
+    font-size: 90%;
+    cursor: pointer;
+}
+
+.DeleteBtn {
+    border: none;
+    margin: 0 1%;
+    padding: 0.5% 1%;
+    color: white;
+    background: none;
+    cursor: pointer;
+}
+
+.DeleteBtn img {
+    width: 22px;
+    height: auto;
+    border-radius: 5px;
+}
+
+.samples {
+    position: absolute;
+    left: -0.5vw;
+    width: 101vw;
+    height: 52vh;
+    overflow-x: scroll;
+    white-space: nowrap;
+    padding: 1% 2%;
+}
+
+.samples table {
+    font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+    font-size: 90%;
+    background: white;
+    width: 120vw;
+    border-collapse: collapse;
+    text-align: left;
+    padding: 1%;
+}
+
+.samples th {
+    font-weight: normal;
+    color: rgb(20, 80, 122);
+    padding: 1%;
+    white-space: nowrap;
+}
+
+.samples td {
+    border-top: 1px solid #e8edff;
+    padding: 1%;
+    white-space: nowrap;
+}
+
+.active td {
+    color: rgb(102, 132, 153);
+}
+
+.active:hover {
+    background: rgb(232, 245, 255);
+}
+
+.delete td {
+    color: rgb(153, 102, 102);
+}
+
+.delete:hover {
+    background: rgb(255, 232, 232);
+}
+
+.delete button {
+    display: none;
 }
