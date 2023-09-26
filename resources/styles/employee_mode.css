@@ -270,6 +270,11 @@ html {
     white-space: nowrap;
 }
 
+.active form {
+    margin: 0;
+    padding: 0;
+}
+
 .active td {
     color: rgb(102, 132, 153);
 }
@@ -288,4 +293,161 @@ html {
 
 .delete button {
     display: none;
+}
+
+/* Стили для подложки */
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+/* Стили для модального окна */
+.modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    padding: 2%;
+    width: 60vw;
+    height: 70vh;
+    max-width: 100%;
+    /* Ширина модального окна */
+    max-height: 100%;
+    /* Высота модального окна */
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-radius: 20px;
+}
+
+.modal-header {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 120%;
+    font-family: "Montserrat-regular";
+    margin-bottom: 2%;
+    color: white;
+}
+
+.modal-header h4 {
+    margin: 0;
+    padding: 0;
+}
+
+.modal-header button {
+    cursor: pointer;
+    border: none;
+    margin: 0 1%;
+    color: rgba(255, 255, 255);
+    font-family: "Montserrat-regular";
+    font-size: 80%;
+    text-decoration: none;
+    background-color: rgb(55, 93, 105);
+    border-radius: 10px;
+    padding: 1%;
+    white-space: nowrap;
+    transition: .3s;
+}
+
+.modal-header button:hover {
+    background-color: rgba(55, 93, 105, 0.742);
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2%;
+}
+
+.modal-body form {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.modal-body form div {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.modal-body input {
+    width: 96%;
+    margin: 2% 2%;
+    background: none;
+    border-radius: 10px;
+    appearance: none;
+    height: 3rem;
+    border: 1px solid white;
+    font-size: 90%;
+    padding: 0 1rem;
+    color: white;
+}
+
+.modal-body input::placeholder {
+    color: rgba(255, 255, 255, 0.733);
+}
+
+.Add-Cancel-Btn {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 2%;
+}
+
+.add {
+    cursor: pointer;
+    margin: 0 1%;
+    padding: 0;
+    width: 20%;
+    background-color: rgb(55, 140, 49);
+    border: none;
+    border-radius: 10px;
+    height: 3rem;
+    color: white;
+    font-size: 100%;
+    font-family: "Montserrat-semibold";
+    transition: .3s;
+}
+
+.add:hover {
+    background-color: rgba(55, 140, 49, 0.8);
+}
+
+.cancel {
+    cursor: pointer;
+    margin: 0 1%;
+    padding: 0;
+    width: 20%;
+    background-color: rgba(55, 93, 105, 0.3);
+    border: none;
+    border-radius: 10px;
+    height: 3rem;
+    color: white;
+    font-size: 100%;
+    font-family: "Montserrat-semibold";
+    transition: .3s;
+}
+
+.cancel:hover {
+    background-color: rgba(55, 93, 105, 0.6);
 }

@@ -18,6 +18,7 @@ func (a *Application) StartServer() {
 	router.LoadHTMLGlob("templates/*")
 	router.Static("/styles", "./resources/styles")
 	router.Static("/imgSample", "./resources/imgSample")
+	router.Static("/js", "./resources/js")
 
 	router.GET("/home", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "home.tmpl", gin.H{
@@ -34,9 +35,9 @@ func (a *Application) StartServer() {
 		}
 
 		// c.JSON(200, sample)
-		for i := 0; i < len(sample); i++ {
-			sample[i].Date_Sealed = sample[i].Date_Sealed[:10]
-		}
+		// for i := 0; i < len(sample); i++ {
+		// 	sample[i].Date_Sealed = sample[i].Date_Sealed[:10]
+		// }
 
 		c.HTML(http.StatusOK, "services.tmpl", gin.H{
 			"css":      "/styles/services.css",
@@ -71,7 +72,7 @@ func (a *Application) StartServer() {
 			})
 			return
 		}
-		sample.Date_Sealed = sample.Date_Sealed[:10]
+		// sample.Date_Sealed = sample.Date_Sealed[:10]
 
 		nextID := id + 1
 		if nextID > len(samples) {
@@ -111,9 +112,9 @@ func (a *Application) StartServer() {
 				return
 			}
 		}
-		for i := 0; i < len(samples); i++ {
-			samples[i].Date_Sealed = samples[i].Date_Sealed[:10]
-		}
+		// for i := 0; i < len(samples); i++ {
+		// 	samples[i].Date_Sealed = samples[i].Date_Sealed[:10]
+		// }
 
 		c.HTML(http.StatusOK, "services.tmpl", gin.H{
 			"css":      "/styles/services.css",
@@ -130,9 +131,9 @@ func (a *Application) StartServer() {
 			return
 		}
 		// c.JSON(200, sample)
-		for i := 0; i < len(sample); i++ {
-			sample[i].Date_Sealed = sample[i].Date_Sealed[:10]
-		}
+		// for i := 0; i < len(sample); i++ {
+		// 	sample[i].Date_Sealed = sample[i].Date_Sealed[:10]
+		// }
 
 		c.HTML(http.StatusOK, "employee_mode.tmpl", gin.H{
 			"css":      "/styles/employee_mode.css",
@@ -158,9 +159,9 @@ func (a *Application) StartServer() {
 			}
 		}
 
-		for i := 0; i < len(samples); i++ {
-			samples[i].Date_Sealed = samples[i].Date_Sealed[:10]
-		}
+		// for i := 0; i < len(samples); i++ {
+		// 	samples[i].Date_Sealed = samples[i].Date_Sealed[:10]
+		// }
 
 		c.HTML(http.StatusOK, "employee_mode.tmpl", gin.H{
 			"css":      "/styles/employee_mode.css",
@@ -170,10 +171,29 @@ func (a *Application) StartServer() {
 
 	})
 
-	router.GET("/add", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "addSample.tmpl", gin.H{
-			"css": "/styles/addSample.css",
-		})
+	router.POST("/delete", func(c *gin.Context) {
+		id, err := strconv.Atoi(c.DefaultQuery("q", ""))
+		log.Print(c.DefaultQuery("q", ""))
+		if err != nil {
+			log.Print(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		err = a.repository.DeleteSampleByID(id)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		sample, err := a.repository.GetAllSamples()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		data := gin.H{
+			"css":      "/styles/employee_mode.css",
+			"Services": sample,
+		}
+		c.HTML(http.StatusOK, "employee_mode.tmpl", data)
 	})
 
 	err := router.Run()
