@@ -34,11 +34,6 @@ func (a *Application) StartServer() {
 			return
 		}
 
-		// c.JSON(200, sample)
-		// for i := 0; i < len(sample); i++ {
-		// 	sample[i].Date_Sealed = sample[i].Date_Sealed[:10]
-		// }
-
 		c.HTML(http.StatusOK, "services.tmpl", gin.H{
 			"css":      "/styles/services.css",
 			"Services": sample,
@@ -180,6 +175,31 @@ func (a *Application) StartServer() {
 			return
 		}
 		err = a.repository.DeleteSampleByID(id)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		sample, err := a.repository.GetAllSamples()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		data := gin.H{
+			"css":      "/styles/employee_mode.css",
+			"Services": sample,
+		}
+		c.HTML(http.StatusOK, "employee_mode.tmpl", data)
+	})
+
+	router.POST("/return", func(c *gin.Context) {
+		id, err := strconv.Atoi(c.DefaultQuery("q", ""))
+		log.Print(c.DefaultQuery("q", ""))
+		if err != nil {
+			log.Print(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		err = a.repository.ReturnSampleByID(id)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

@@ -66,3 +66,10 @@ func (r *Repository) DeleteSampleByID(id int) error {
 	}
 	return nil
 }
+
+func (r *Repository) ReturnSampleByID(id int) error {
+	if err := r.db.Exec("UPDATE samples SET sample_status='Active' WHERE Id_sample= ?", id).Error; err != nil {
+		return err
+	}
+	return nil
+}

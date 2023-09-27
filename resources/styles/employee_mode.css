@@ -270,7 +270,7 @@ html {
     white-space: nowrap;
 }
 
-.active form {
+.active form, .delete form {
     margin: 0;
     padding: 0;
 }
@@ -283,6 +283,25 @@ html {
     background: rgb(232, 245, 255);
 }
 
+.ReturnBtn {
+    border: none;
+    margin: 0 1%;
+    padding: 0.5% 1%;
+    color: white;
+    background: none;
+    cursor: pointer;
+}
+
+.ReturnBtn img {
+    width: 22px;
+    height: auto;
+    border-radius: 5px;
+}
+
+.active .ReturnBtn {
+    display: none;
+}
+
 .delete td {
     color: rgb(153, 102, 102);
 }
@@ -291,9 +310,12 @@ html {
     background: rgb(255, 232, 232);
 }
 
-.delete button {
+.delete .DeleteBtn {
     display: none;
 }
+
+
+
 
 /* Стили для подложки */
 .overlay {

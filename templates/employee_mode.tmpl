@@ -49,14 +49,17 @@
                         <tr class="{{ $status }}">
                             <td>
                                 <form action="/delete?q={{.Id_sample}}" method="POST" class="form">
-                                    <button type="submit" class="DeleteBtn"><img src="../../styles/icons8-удалить-96-2.png" alt="Delete" title="Delete"></button>
+                                    <button type="submit" class="DeleteBtn"><img src="../../styles/icons8-крестик-78-2.png" alt="Delete" title="Delete"></button>
+                                </form>
+                                <form action="/return?q={{.Id_sample}}" method="POST" class="form">
+                                    <button type="submit" class="ReturnBtn"><img src="../../styles/icons8-вернуть-96.png" alt="Return" title="Return"></button>
                                 </form>
                             </td>
                             <td>{{ .Id_sample }}</td>
                             <td>{{ .Name }}</td>
                             <td>{{ .Sample_status }}</td>
                             <td>{{ .Type }}</td>
-                            <td>{{ .Date_Sealed }}</td>
+                            <td>{{ .Date_Sealed.Format "02 January 2006"}}</td>
                             <td>{{ .Sol_Sealed }}</td>
                             <td>{{ .Rock_Type }}</td>
                             <td>{{ .Height }}</td>
