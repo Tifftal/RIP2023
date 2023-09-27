@@ -171,18 +171,14 @@ func (a *Application) StartServer() {
 		log.Print(c.DefaultQuery("q", ""))
 		if err != nil {
 			log.Print(err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
 		}
 		err = a.repository.DeleteSampleByID(id)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
+			log.Print(err)
 		}
 		sample, err := a.repository.GetAllSamples()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
+			log.Print(err)
 		}
 		data := gin.H{
 			"css":      "/styles/employee_mode.css",
