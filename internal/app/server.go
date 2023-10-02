@@ -20,6 +20,40 @@ func (a *Application) StartServer() {
 	router.Static("/imgSample", "./resources/imgSample")
 	router.Static("/js", "./resources/js")
 
+	user := router.Group("/user")
+	{
+		user.GET("/register", func(c *gin.Context) {
+			c.JSON(200, gin.H{
+				"message": "ping",
+			})
+		})
+	}
+
+	api := router.Group("/api")
+	{
+		mission := api.Group("/misson")
+		{
+			mission.POST("/create_mission", func(c *gin.Context) {
+				id := c.Query("id")
+				c.JSON(200, gin.H{
+					"message": "ping",
+					"id":      id,
+				})
+			})
+		}
+
+		sample := api.Group("/sample")
+		{
+			sample.POST("create_sample", func(c *gin.Context) {
+				id := c.Query("id")
+				c.JSON(200, gin.H{
+					"message": "ping",
+					"id":      id,
+				})
+			})
+		}
+	}
+
 	router.GET("/home", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "home.tmpl", gin.H{
 			"name": "Main website",
