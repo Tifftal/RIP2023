@@ -1,6 +1,5 @@
 package app
 
-import "C"
 import (
 	"log"
 	"net/http"
