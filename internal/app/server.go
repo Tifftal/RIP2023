@@ -1,6 +1,7 @@
 package app
 
 import (
+	"MSRM/internal/app/delivery"
 	"log"
 	"net/http"
 	"strconv"
@@ -21,7 +22,13 @@ func (a *Application) StartServer() {
 
 	user := router.Group("/user")
 	{
-		user.GET("/register", func(c *gin.Context) {
+		user.POST("/register", func(c *gin.Context) {
+			c.JSON(200, gin.H{
+				"message": "ping",
+			})
+		})
+
+		user.POST("/login", func(c *gin.Context) {
 			c.JSON(200, gin.H{
 				"message": "ping",
 			})
@@ -30,25 +37,102 @@ func (a *Application) StartServer() {
 
 	api := router.Group("/api")
 	{
-		mission := api.Group("/misson")
+		user := api.Group("/user")
 		{
-			mission.POST("/create_mission", func(c *gin.Context) {
-				id := c.Query("id")
-				c.JSON(200, gin.H{
-					"message": "ping",
-					"id":      id,
-				})
+			//http://localhost:8080/api/user/delete_user/1										DONE
+			user.DELETE("/delete_user/:id", func(c *gin.Context) {
+				delivery.DeleteUserByID(a.repository, c)
+			})
+
+			//http://localhost:8080/api/user/edit_info											DONE
+			/*
+				{
+					"Id_user": 2,
+					"Name": "TESTEST",
+					"User_status": "Active"
+				}
+			*/
+			user.PUT("edit_info", func(c *gin.Context) {
+				delivery.EditUser(a.repository, c)
+			})
+		}
+
+		mission := api.Group("/mission")
+		{
+			//http://localhost:8080/api/mission/update_mission									DONE
+			/*
+				{
+					"Id_mission": 2,
+					"Name": "TESTEST",
+					"Mission_status": "testest"
+				}
+			*/
+			mission.PUT("/update_mission", func(c *gin.Context) {
+				delivery.UpdateMission(a.repository, c)
+			})
+
+			//http://localhost:8080/api/mission/delete_mission/1								DONE
+			mission.DELETE("/delete_mission/:id", func(c *gin.Context) {
+				delivery.DeleteMissionByID(a.repository, c)
+			})
+
+			//http://localhost:8080/api/mission/get_all_missions								DONE
+			mission.GET("/get_all_missions", func(c *gin.Context) {
+				delivery.GetAllMissiions(a.repository, c)
+			})
+
+			//http://localhost:8080/api/mission/get_mission/2 									DONE
+			mission.GET("/get_mission/:id", func(c *gin.Context) {
+				delivery.GetMissionByID(a.repository, c)
 			})
 		}
 
 		sample := api.Group("/sample")
 		{
+			//http://localhost:8080/api/sample/create_sample   									DONE
+			/*
+				{
+					"Name": "TEST1",
+					"Type": "test",
+					"Date_Sealed": "2021-08-06T00:00:00Z",
+					"Sol_Sealed": 100,
+					"Rock_Type": "n/a",
+					"Height": "n/a",
+					"Current_Location": "Sample Depot",
+					"Image": "../../imgSample/no1.png",
+					"Video": "https://mars.nasa.gov/embed/27520/",
+					"Sample_status": "Active"
+				}
+			*/
 			sample.POST("create_sample", func(c *gin.Context) {
-				id := c.Query("id")
-				c.JSON(200, gin.H{
-					"message": "ping",
-					"id":      id,
-				})
+				delivery.CreateSample(a.repository, c)
+			})
+
+			//http://localhost:8080/api/sample/delete_sample/8									DONE
+			sample.DELETE("/delete_sample/:id", func(c *gin.Context) {
+				delivery.DeleteSampleByID(a.repository, c)
+			})
+
+			//http://localhost:8080/api/sample/get_all_samples                      			DONE
+			sample.GET("/get_all_samples", func(c *gin.Context) {
+				delivery.GetAllSamples(a.repository, c)
+			})
+
+			//http://localhost:8080/api/sample/get_sample/5										DONE
+			sample.GET("/get_sample/:id", func(c *gin.Context) {
+				delivery.GetSampleByID(a.repository, c)
+			})
+
+			//http://localhost:8080/api/sample/update_sample									DONE
+			/*
+				{
+					"Id_sample": 9,
+					"Name": "TESTEST",
+					"Type": "testest"
+				}
+			*/
+			sample.PUT("/update_sample", func(c *gin.Context) {
+				delivery.UpdateSample(a.repository, c)
 			})
 		}
 	}
@@ -220,29 +304,13 @@ func (a *Application) StartServer() {
 		c.HTML(http.StatusOK, "employee_mode.tmpl", data)
 	})
 
-	router.POST("/return", func(c *gin.Context) {
-		id, err := strconv.Atoi(c.DefaultQuery("q", ""))
-		log.Print(c.DefaultQuery("q", ""))
+	router.GET("/test", func(c *gin.Context) {
+		mission, err := a.repository.GetAllMissiions()
 		if err != nil {
-			log.Print(err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			log.Println("Error with running\nServer down")
 			return
 		}
-		err = a.repository.ReturnSampleByID(id)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		sample, err := a.repository.GetAllSamples()
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		data := gin.H{
-			"css":      "/styles/employee_mode.css",
-			"Services": sample,
-		}
-		c.HTML(http.StatusOK, "employee_mode.tmpl", data)
+		c.JSON(http.StatusOK, mission)
 	})
 
 	err := router.Run()
