@@ -50,3 +50,43 @@ func (r *Repository) UpdateSample(sample *ds.Samples) error {
 
 	return err
 }
+
+func (repository *Repository) GetAllSamplesOrderByType() ([]ds.Samples, error) {
+	sample := []ds.Samples{}
+	err := repository.db.Order("Type ASC").Order("Id_sample ASC").Find(&sample).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return sample, nil
+}
+
+func (repository *Repository) GetAllSamplesOrderByDate() ([]ds.Samples, error) {
+	sample := []ds.Samples{}
+	err := repository.db.Order("Date_Sealed ASC").Order("Id_sample ASC").Find(&sample).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return sample, nil
+}
+
+func (repository *Repository) GetAllSamplesStatusActive() ([]ds.Samples, error) {
+	sample := []ds.Samples{}
+	err := repository.db.Where("sample_status='Active'").Order("Id_sample ASC").Find(&sample).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return sample, nil
+}
+
+func (repository *Repository) GetAllSamplesStatusDeleted() ([]ds.Samples, error) {
+	sample := []ds.Samples{}
+	err := repository.db.Where("sample_status='Deleted'").Order("Id_sample ASC").Find(&sample).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return sample, nil
+}

@@ -12,7 +12,7 @@ import (
 
 func GetAllMissiions(repository *repository.Repository, c *gin.Context) {
 	var mission []ds.Missions
-	mission, err := repository.GetAllMissiions()
+	mission, err := repository.GetAllMissions()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return
@@ -102,4 +102,85 @@ func UpdateMission(repository *repository.Repository, c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Mission updated successfully",
 	})
+}
+
+func GetMissionDetailByID(repository *repository.Repository, c *gin.Context) {
+	var mission *ds.Missions
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if id < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid ID (id < 0)",
+		})
+		return
+	}
+
+	mission, samples, err := repository.GetMissioninDetailByID(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Return JSON response with mission details and associated samples
+	c.JSON(http.StatusOK, gin.H{
+		"mission": mission,
+		"samples": samples,
+	})
+}
+
+func GetMissionByUserID(repository *repository.Repository, c *gin.Context) {
+	// Parse user ID from the request parameters
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	// Call the repository function to get missions for the user
+	missions, err := repository.GetMissionByUserID(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve missions"})
+		return
+	}
+
+	// Return the missions in the response
+	c.JSON(http.StatusOK, missions)
+}
+
+func GetMissionByModeratorID(repository *repository.Repository, c *gin.Context) {
+	// Parse user ID from the request parameters
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	// Call the repository function to get missions for the user
+	missions, err := repository.GetMissionByModeratorID(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve missions"})
+		return
+	}
+
+	// Return the missions in the response
+	c.JSON(http.StatusOK, missions)
+}
+
+func GetMissionByStatus(repository *repository.Repository, c *gin.Context) {
+	// Parse status from the request parameters
+	status := c.Param("status")
+
+	// Call the repository function to get missions by status
+	missions, err := repository.GetMissionByStatus(status)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve missions"})
+		return
+	}
+
+	// Return the missions in the response
+	c.JSON(http.StatusOK, missions)
 }

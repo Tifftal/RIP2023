@@ -25,3 +25,13 @@ func (repository *Repository) GetUserByID(id int) (*ds.Users, error) {
 
 	return user, nil
 }
+
+func (repository *Repository) GetUserByRole(role string) ([]ds.Users, error) {
+	user := []ds.Users{}
+	err := repository.db.Where("Role=?", role).Find(&user).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}

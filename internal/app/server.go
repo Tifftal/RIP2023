@@ -45,28 +45,21 @@ func (a *Application) StartServer() {
 			})
 
 			//http://localhost:8080/api/user/edit_info											DONE
-			/*
-				{
-					"Id_user": 2,
-					"Name": "TESTEST",
-					"User_status": "Active"
-				}
-			*/
 			user.PUT("edit_info", func(c *gin.Context) {
 				delivery.EditUser(a.repository, c)
+			})
+
+			user.GET("get_user_by_role/:role", func(c *gin.Context) {
+				delivery.GetUserByRole(a.repository, c)
 			})
 		}
 
 		mission := api.Group("/mission")
 		{
+			mission.GET("/mission_detail/:id", func(c *gin.Context) {
+				delivery.GetMissionDetailByID(a.repository, c)
+			})
 			//http://localhost:8080/api/mission/update_mission									DONE
-			/*
-				{
-					"Id_mission": 2,
-					"Name": "TESTEST",
-					"Mission_status": "testest"
-				}
-			*/
 			mission.PUT("/update_mission", func(c *gin.Context) {
 				delivery.UpdateMission(a.repository, c)
 			})
@@ -85,25 +78,23 @@ func (a *Application) StartServer() {
 			mission.GET("/get_mission/:id", func(c *gin.Context) {
 				delivery.GetMissionByID(a.repository, c)
 			})
+
+			mission.GET("/get_mission_by_user/:id", func(c *gin.Context) {
+				delivery.GetMissionByUserID(a.repository, c)
+			})
+
+			mission.GET("/get_mission_by_moderator/:id", func(c *gin.Context) {
+				delivery.GetMissionByModeratorID(a.repository, c)
+			})
+
+			mission.GET("/get_mission_by_status/:status", func(c *gin.Context) {
+				delivery.GetMissionByStatus(a.repository, c)
+			})
 		}
 
 		sample := api.Group("/sample")
 		{
 			//http://localhost:8080/api/sample/create_sample   									DONE
-			/*
-				{
-					"Name": "TEST1",
-					"Type": "test",
-					"Date_Sealed": "2021-08-06T00:00:00Z",
-					"Sol_Sealed": 100,
-					"Rock_Type": "n/a",
-					"Height": "n/a",
-					"Current_Location": "Sample Depot",
-					"Image": "../../imgSample/no1.png",
-					"Video": "https://mars.nasa.gov/embed/27520/",
-					"Sample_status": "Active"
-				}
-			*/
 			sample.POST("create_sample", func(c *gin.Context) {
 				delivery.CreateSample(a.repository, c)
 			})
@@ -118,19 +109,28 @@ func (a *Application) StartServer() {
 				delivery.GetAllSamples(a.repository, c)
 			})
 
+			sample.GET("get_all_samples_order_type", func(c *gin.Context) {
+				delivery.GetAllSamplesOrderByType(a.repository, c)
+			})
+
+			sample.GET("get_all_samples_order_date", func(c *gin.Context) {
+				delivery.GetAllSamplesOrderByDate(a.repository, c)
+			})
+
+			sample.GET("get_all_samples_active", func(c *gin.Context) {
+				delivery.GetAllSamplesStatusActive(a.repository, c)
+			})
+
+			sample.GET("get_all_samples_deleted", func(c *gin.Context) {
+				delivery.GetAllSamplesStatusDaleted(a.repository, c)
+			})
+
 			//http://localhost:8080/api/sample/get_sample/5										DONE
 			sample.GET("/get_sample/:id", func(c *gin.Context) {
 				delivery.GetSampleByID(a.repository, c)
 			})
 
 			//http://localhost:8080/api/sample/update_sample									DONE
-			/*
-				{
-					"Id_sample": 9,
-					"Name": "TESTEST",
-					"Type": "testest"
-				}
-			*/
 			sample.PUT("/update_sample", func(c *gin.Context) {
 				delivery.UpdateSample(a.repository, c)
 			})
@@ -305,7 +305,7 @@ func (a *Application) StartServer() {
 	})
 
 	router.GET("/test", func(c *gin.Context) {
-		mission, err := a.repository.GetAllMissiions()
+		mission, err := a.repository.GetAllMissions()
 		if err != nil {
 			log.Println("Error with running\nServer down")
 			return

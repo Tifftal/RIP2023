@@ -69,3 +69,18 @@ func EditUser(repository *repository.Repository, c *gin.Context) {
 		"message": "User edited successfully",
 	})
 }
+
+func GetUserByRole(repository *repository.Repository, c *gin.Context) {
+	// Parse status from the request parameters
+	role := c.Param("role")
+
+	// Call the repository function to get missions by status
+	users, err := repository.GetUserByRole(role)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve missions"})
+		return
+	}
+
+	// Return the missions in the response
+	c.JSON(http.StatusOK, users)
+}
