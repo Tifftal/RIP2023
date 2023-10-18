@@ -20,29 +20,6 @@ func GetAllMissiions(repository *repository.Repository, c *gin.Context) {
 	c.JSON(http.StatusOK, mission)
 }
 
-func GetMissionByID(repository *repository.Repository, c *gin.Context) {
-	var mission *ds.Missions
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
-	fmt.Println(id)
-
-	if id < 0 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Oshibochka id<0",
-		})
-		return
-	}
-	mission, err = repository.GetMissionByID(id)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
-	c.JSON(http.StatusOK, mission)
-}
-
 func DeleteMissionByID(repository *repository.Repository, c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -183,4 +160,102 @@ func GetMissionByStatus(repository *repository.Repository, c *gin.Context) {
 
 	// Return the missions in the response
 	c.JSON(http.StatusOK, missions)
+}
+
+func AddSampleToMission(repository *repository.Repository, c *gin.Context) {
+	// Получаем Id_sample из параметра запроса
+	sampleID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Id_sample"})
+		return
+	}
+	// Вызываем функцию для добавления образца в последнюю миссию с Mission_status = "Draft"
+	mission, samples, err := repository.AddSampleToLastDraftMission(sampleID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	// Возвращаем JSON-ответ с деталями миссии и образцами
+	c.JSON(http.StatusOK, gin.H{
+		"mission": mission,
+		"samples": samples,
+	})
+}
+
+// UpdateMissionStatus обновляет статус миссии.
+func UpdateMissionStatusByUser(repository *repository.Repository, c *gin.Context) {
+	var jsonData map[string]interface{}
+	if err := c.BindJSON(&jsonData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Извлекаем необходимые данные из JSON
+	missionID, idOk := jsonData["Id_mission"].(float64)
+	newStatus, statusOk := jsonData["Mission_status"].(string)
+
+	// Проверяем валидность ID миссии
+	if !idOk || missionID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or missing Id_mission"})
+		return
+	}
+
+	// Проверяем валидность нового статуса
+	if !statusOk {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or missing Mission_status"})
+		return
+	}
+
+	// Вызываем метод для обновления статуса миссии
+	err := repository.UpdateMissionStatusByUser(int(missionID), newStatus)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Mission status updated successfully"})
+}
+
+func RemoveSampleFromMission(repository *repository.Repository, c *gin.Context) {
+	// Получаем Id_mission и Id_sample из параметров запроса
+	missionID, err := strconv.Atoi(c.Param("mission_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Id_mission"})
+		return
+	}
+
+	sampleID, err := strconv.Atoi(c.Param("sample_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Id_sample"})
+		return
+	}
+
+	mission, samples, err := repository.RemoveSampleFromMission(uint(missionID), uint(sampleID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	// Возвращаем JSON-ответ с деталями миссии и образцами
+	c.JSON(http.StatusOK, gin.H{
+		"mission": mission,
+		"samples": samples,
+	})
+}
+
+func RemoveSampleFromLastDraftMission(repository *repository.Repository, c *gin.Context) {
+	sampleID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Id_sample"})
+		return
+	}
+	mission, samples, err := repository.RemoveSampleFromLastDraftMission(sampleID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	// Возвращаем JSON-ответ с деталями миссии и образцами
+	c.JSON(http.StatusOK, gin.H{
+		"mission": mission,
+		"samples": samples,
+	})
 }

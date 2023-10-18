@@ -13,4 +13,5 @@ type Missions struct {
 	Creation_date   time.Time `json:"Creation_date"`
 	Formation_date  time.Time `json:"Formation_date"`
 	Completion_date time.Time `json:"Completion_date"`
+	Samples         []Samples `gorm:"many2many:mission_samples;joinForeignKey:Id_mission;joinReferences:Id_mission" json:"samples"`
 }

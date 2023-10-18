@@ -16,8 +16,27 @@ func main() {
 		panic("failed to connect database")
 	}
 
+	// Миграция таблицы Samples
 	err = db.AutoMigrate(&ds.Samples{})
 	if err != nil {
-		panic("cant migrate db")
+		panic("failed to migrate Samples table")
+	}
+
+	// Миграция таблицы Missions
+	err = db.AutoMigrate(&ds.Missions{})
+	if err != nil {
+		panic("failed to migrate Missions table")
+	}
+
+	// Миграция таблицы Users
+	err = db.AutoMigrate(&ds.Users{})
+	if err != nil {
+		panic("failed to migrate Users table")
+	}
+
+	// Миграция таблицы Mission_samples
+	err = db.AutoMigrate(&ds.Mission_samples{})
+	if err != nil {
+		panic("failed to migrate Mission_samples table")
 	}
 }

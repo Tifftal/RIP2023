@@ -39,12 +39,10 @@ func (a *Application) StartServer() {
 	{
 		user := api.Group("/user")
 		{
-			//http://localhost:8080/api/user/delete_user/1										DONE
 			user.DELETE("/delete_user/:id", func(c *gin.Context) {
 				delivery.DeleteUserByID(a.repository, c)
 			})
 
-			//http://localhost:8080/api/user/edit_info											DONE
 			user.PUT("edit_info", func(c *gin.Context) {
 				delivery.EditUser(a.repository, c)
 			})
@@ -56,27 +54,44 @@ func (a *Application) StartServer() {
 
 		mission := api.Group("/mission")
 		{
+			//DONE
+			mission.DELETE("/delete_sample_from_last_mission/:id", func(c *gin.Context) {
+				delivery.RemoveSampleFromLastDraftMission(a.repository, c)
+			})
+
+			//DONE
+			mission.DELETE("/delete_sample_from_mission/:mission_id/:sample_id", func(c *gin.Context) {
+				delivery.RemoveSampleFromMission(a.repository, c)
+			})
+
+			//DONE
+			mission.PUT("/add_sample_to_mission/:id", func(c *gin.Context) {
+				delivery.AddSampleToMission(a.repository, c)
+			})
+
+			//DONE
 			mission.GET("/mission_detail/:id", func(c *gin.Context) {
 				delivery.GetMissionDetailByID(a.repository, c)
 			})
-			//http://localhost:8080/api/mission/update_mission									DONE
+
+			//DONE
 			mission.PUT("/update_mission", func(c *gin.Context) {
 				delivery.UpdateMission(a.repository, c)
 			})
 
-			//http://localhost:8080/api/mission/delete_mission/1								DONE
+			//DONE
 			mission.DELETE("/delete_mission/:id", func(c *gin.Context) {
 				delivery.DeleteMissionByID(a.repository, c)
 			})
 
-			//http://localhost:8080/api/mission/get_all_missions								DONE
+			//DONE
 			mission.GET("/get_all_missions", func(c *gin.Context) {
 				delivery.GetAllMissiions(a.repository, c)
 			})
 
-			//http://localhost:8080/api/mission/get_mission/2 									DONE
-			mission.GET("/get_mission/:id", func(c *gin.Context) {
-				delivery.GetMissionByID(a.repository, c)
+			//DONE
+			mission.PUT("/update_mission_status_by_user", func(c *gin.Context) {
+				delivery.UpdateMissionStatusByUser(a.repository, c)
 			})
 
 			mission.GET("/get_mission_by_user/:id", func(c *gin.Context) {
@@ -94,17 +109,17 @@ func (a *Application) StartServer() {
 
 		sample := api.Group("/sample")
 		{
-			//http://localhost:8080/api/sample/create_sample   									DONE
+			//DONE
 			sample.POST("create_sample", func(c *gin.Context) {
 				delivery.CreateSample(a.repository, c)
 			})
 
-			//http://localhost:8080/api/sample/delete_sample/8									DONE
+			//DONE
 			sample.DELETE("/delete_sample/:id", func(c *gin.Context) {
 				delivery.DeleteSampleByID(a.repository, c)
 			})
 
-			//http://localhost:8080/api/sample/get_all_samples                      			DONE
+			//DONE
 			sample.GET("/get_all_samples", func(c *gin.Context) {
 				delivery.GetAllSamples(a.repository, c)
 			})
@@ -125,12 +140,12 @@ func (a *Application) StartServer() {
 				delivery.GetAllSamplesStatusDaleted(a.repository, c)
 			})
 
-			//http://localhost:8080/api/sample/get_sample/5										DONE
+			//DONE
 			sample.GET("/get_sample/:id", func(c *gin.Context) {
 				delivery.GetSampleByID(a.repository, c)
 			})
 
-			//http://localhost:8080/api/sample/update_sample									DONE
+			//DONE
 			sample.PUT("/update_sample", func(c *gin.Context) {
 				delivery.UpdateSample(a.repository, c)
 			})
