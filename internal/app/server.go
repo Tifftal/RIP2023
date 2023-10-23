@@ -94,6 +94,11 @@ func (a *Application) StartServer() {
 				delivery.UpdateMissionStatusByUser(a.repository, c)
 			})
 
+			//DONE
+			mission.PUT("/update_mission_status_by_moderator", func(c *gin.Context) {
+				delivery.UpdateMissionStatusByModerator(a.repository, c)
+			})
+
 			mission.GET("/get_mission_by_user/:id", func(c *gin.Context) {
 				delivery.GetMissionByUserID(a.repository, c)
 			})

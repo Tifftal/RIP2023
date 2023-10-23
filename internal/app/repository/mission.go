@@ -180,6 +180,26 @@ func (r *Repository) UpdateMissionStatusByUser(id int, newStatus string) error {
 	return err
 }
 
+func (r *Repository) UpdateMissionStatusByModerator(id int, newStatus string) error {
+	// Проверяем, что новый статус допустим
+	allowedStatus := map[string]bool{
+		"Completed": true,
+		"Rejected":  true,
+		"At work":   true,
+	}
+
+	if !allowedStatus[newStatus] {
+		return errors.New("Invalid mission status")
+	}
+
+	// Обновляем статус миссии
+	err := r.db.Model(&ds.Missions{}).
+		Where("Id_mission = ?", id).
+		Update("mission_status", newStatus).
+		Error
+
+	return err
+}
 func (repository *Repository) RemoveSampleFromMission(missionID, sampleID uint) (*ds.Missions, []ds.Samples, error) {
 	// Проверяем, существует ли миссия с указанным ID
 	var mission ds.Missions

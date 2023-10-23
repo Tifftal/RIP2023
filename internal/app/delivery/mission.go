@@ -216,6 +216,39 @@ func UpdateMissionStatusByUser(repository *repository.Repository, c *gin.Context
 	c.JSON(http.StatusOK, gin.H{"message": "Mission status updated successfully"})
 }
 
+func UpdateMissionStatusByModerator(repository *repository.Repository, c *gin.Context) {
+	var jsonData map[string]interface{}
+	if err := c.BindJSON(&jsonData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Извлекаем необходимые данные из JSON
+	missionID, idOk := jsonData["Id_mission"].(float64)
+	newStatus, statusOk := jsonData["Mission_status"].(string)
+
+	// Проверяем валидность ID миссии
+	if !idOk || missionID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or missing Id_mission"})
+		return
+	}
+
+	// Проверяем валидность нового статуса
+	if !statusOk {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or missing Mission_status"})
+		return
+	}
+
+	// Вызываем метод для обновления статуса миссии
+	err := repository.UpdateMissionStatusByUser(int(missionID), newStatus)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Mission status updated successfully"})
+}
+
 func RemoveSampleFromMission(repository *repository.Repository, c *gin.Context) {
 	// Получаем Id_mission и Id_sample из параметров запроса
 	missionID, err := strconv.Atoi(c.Param("mission_id"))
