@@ -3,18 +3,29 @@ package repository
 import (
 	"MSRM/internal/app/ds"
 	"errors"
+	"time"
 
 	"gorm.io/gorm"
 )
 
 func (repository *Repository) GetAllMissions() ([]ds.Missions, error) {
 	mission := []ds.Missions{}
-	err := repository.db.Find(&mission).Error
+	err := repository.db.Order("formation_date ASC").Find(&mission).Error
 	if err != nil {
 		return nil, err
 	}
 
 	return mission, nil
+}
+
+func (repository *Repository) GetAllMissionsByDateRange(startDate, endDate time.Time) ([]ds.Missions, error) {
+	missions := []ds.Missions{}
+	err := repository.db.Where("formation_date BETWEEN ? AND ?", startDate, endDate).Order("formation_date ASC").Find(&missions).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return missions, nil
 }
 
 func (repository *Repository) GetMissionByID(id int) (*ds.Missions, error) {
@@ -76,36 +87,6 @@ func (repository *Repository) GetMissioninDetailByID(id int) (*ds.Missions, []ds
 
 	return mission, samples, nil
 }
-
-// func (repository *Repository) GetMissionByUserID(id int) ([]ds.Missions, error) {
-// 	mission := []ds.Missions{}
-// 	err := repository.db.Where("User_id=?", id).Find(&mission).Error
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return mission, nil
-// }
-
-// func (repository *Repository) GetMissionByModeratorID(id int) ([]ds.Missions, error) {
-// 	mission := []ds.Missions{}
-// 	err := repository.db.Where("Moderator_id=?", id).Find(&mission).Error
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return mission, nil
-// }
-
-// func (repository *Repository) GetMissionByStatus(status string) ([]ds.Missions, error) {
-// 	mission := []ds.Missions{}
-// 	err := repository.db.Where("Mission_status=?", status).Find(&mission).Error
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return mission, nil
-// }
 
 func (r *Repository) UpdateMissionStatusByUser(id int, newStatus string, user_id int) error {
 	var user ds.Users

@@ -4,6 +4,7 @@ import (
 	"MSRM/internal/app/ds"
 	"MSRM/internal/app/repository"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -177,4 +178,44 @@ func AddSampleToMission(repository *repository.Repository, c *gin.Context) {
 		"mission": mission,
 		"samples": samples,
 	})
+}
+
+func AddImageToSample(repository *repository.Repository, c *gin.Context) {
+	sampleID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "недопсутимый ИД багажа"})
+		return
+	}
+
+	// Чтение изображения из запроса
+	image, err := c.FormFile("image")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "недопустимое изображение"})
+		return
+	}
+
+	// Чтение содержимого изображения в байтах
+	file, err := image.Open()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "не удалось открыть изображение"})
+		return
+	}
+	defer file.Close()
+
+	imageBytes, err := io.ReadAll(file)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "не удалось прочитать изображение в байтах"})
+		return
+	}
+	// Получение Content-Type из заголовков запроса
+	contentType := image.Header.Get("Content-Type")
+
+	// Вызов функции репозитория для добавления изображения
+	err = repository.AddSampleImage(sampleID, imageBytes, contentType)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Изображение усспешно загружено"})
 }

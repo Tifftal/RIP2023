@@ -12,8 +12,39 @@ import (
 )
 
 func GetAllMissiions(repository *repository.Repository, c *gin.Context) {
-	var mission []ds.Missions
-	mission, err := repository.GetAllMissions()
+	startDateString := c.Query("start_date")
+	endDateString := c.Query("end_date")
+
+	var startDate, endDate time.Time
+	var err error
+
+	if startDateString != "" {
+		if startDate, err = time.Parse("2006-01-02", startDateString); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат даты начала"})
+			return
+		}
+	}
+
+	if endDateString != "" {
+		if endDate, err = time.Parse("2006-01-02", endDateString); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Неверный формат даты конца"})
+			return
+		}
+	}
+
+	// Если start_date и end_date не указаны, вызывайте функцию для получения всех миссий
+	if startDateString == "" && endDateString == "" {
+		mission, err := repository.GetAllMissions()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, err)
+			return
+		}
+		c.JSON(http.StatusOK, mission)
+		return
+	}
+
+	// Иначе вызывайте функцию для получения миссий с фильтрацией по дате
+	mission, err := repository.GetAllMissionsByDateRange(startDate, endDate)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return

@@ -195,3 +195,20 @@ func (r *Repository) AddSampleToLastDraftMission(sampleID int, user_id int) (*ds
 
 // 	return sample, nil
 // }
+
+func (r *Repository) AddSampleImage(id int, imageBytes []byte, contentType string) error {
+	// Загрузка нового изображения в MinIO
+	imageURL, err := r.minio.UploadServiceImage(id, imageBytes, contentType)
+	if err != nil {
+		return err
+	}
+
+	// Обновление информации об изображении в БД (например, ссылки на MinIO)
+	err = r.db.Model(&ds.Samples{}).Where("id_sample = ?", id).Update("photo_url", imageURL).Error
+	if err != nil {
+		// Обработка ошибки обновления URL изображения в БД, если необходимо
+		return errors.New("ошибка обновления url изображения в БД")
+	}
+
+	return nil
+}

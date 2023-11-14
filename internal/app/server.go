@@ -117,6 +117,10 @@ func (a *Application) StartServer() {
 			sample.PUT("/to_mission/:id", func(c *gin.Context) {
 				delivery.AddSampleToMission(a.repository, c)
 			})
+
+			sample.POST("/:id/image", func(c *gin.Context) {
+				delivery.AddImageToSample(a.repository, c)
+			})
 		}
 	}
 
