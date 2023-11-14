@@ -162,26 +162,6 @@ func GetMissionByStatus(repository *repository.Repository, c *gin.Context) {
 	c.JSON(http.StatusOK, missions)
 }
 
-func AddSampleToMission(repository *repository.Repository, c *gin.Context) {
-	// Получаем Id_sample из параметра запроса
-	sampleID, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Id_sample"})
-		return
-	}
-	// Вызываем функцию для добавления образца в последнюю миссию с Mission_status = "Draft"
-	mission, samples, err := repository.AddSampleToLastDraftMission(sampleID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	// Возвращаем JSON-ответ с деталями миссии и образцами
-	c.JSON(http.StatusOK, gin.H{
-		"mission": mission,
-		"samples": samples,
-	})
-}
-
 // UpdateMissionStatus обновляет статус миссии.
 func UpdateMissionStatusByUser(repository *repository.Repository, c *gin.Context) {
 	var jsonData map[string]interface{}

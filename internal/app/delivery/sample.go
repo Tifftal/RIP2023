@@ -20,45 +20,45 @@ func GetAllSamples(repository *repository.Repository, c *gin.Context) {
 	c.JSON(http.StatusOK, sample)
 }
 
-func GetAllSamplesOrderByType(repository *repository.Repository, c *gin.Context) {
-	var sample []ds.Samples
-	sample, err := repository.GetAllSamplesOrderByType()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
-	c.JSON(http.StatusOK, sample)
-}
+// func GetAllSamplesOrderByType(repository *repository.Repository, c *gin.Context) {
+// 	var sample []ds.Samples
+// 	sample, err := repository.GetAllSamplesOrderByType()
+// 	if err != nil {
+// 		c.JSON(http.StatusInternalServerError, err)
+// 		return
+// 	}
+// 	c.JSON(http.StatusOK, sample)
+// }
 
-func GetAllSamplesOrderByDate(repository *repository.Repository, c *gin.Context) {
-	var sample []ds.Samples
-	sample, err := repository.GetAllSamplesOrderByDate()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
-	c.JSON(http.StatusOK, sample)
-}
+// func GetAllSamplesOrderByDate(repository *repository.Repository, c *gin.Context) {
+// 	var sample []ds.Samples
+// 	sample, err := repository.GetAllSamplesOrderByDate()
+// 	if err != nil {
+// 		c.JSON(http.StatusInternalServerError, err)
+// 		return
+// 	}
+// 	c.JSON(http.StatusOK, sample)
+// }
 
-func GetAllSamplesStatusActive(repository *repository.Repository, c *gin.Context) {
-	var sample []ds.Samples
-	sample, err := repository.GetAllSamplesStatusActive()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
-	c.JSON(http.StatusOK, sample)
-}
+// func GetAllSamplesStatusActive(repository *repository.Repository, c *gin.Context) {
+// 	var sample []ds.Samples
+// 	sample, err := repository.GetAllSamplesStatusActive()
+// 	if err != nil {
+// 		c.JSON(http.StatusInternalServerError, err)
+// 		return
+// 	}
+// 	c.JSON(http.StatusOK, sample)
+// }
 
-func GetAllSamplesStatusDaleted(repository *repository.Repository, c *gin.Context) {
-	var sample []ds.Samples
-	sample, err := repository.GetAllSamplesStatusDeleted()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
-	c.JSON(http.StatusOK, sample)
-}
+// func GetAllSamplesStatusDaleted(repository *repository.Repository, c *gin.Context) {
+// 	var sample []ds.Samples
+// 	sample, err := repository.GetAllSamplesStatusDeleted()
+// 	if err != nil {
+// 		c.JSON(http.StatusInternalServerError, err)
+// 		return
+// 	}
+// 	c.JSON(http.StatusOK, sample)
+// }
 
 func GetSampleByID(repository *repository.Repository, c *gin.Context) {
 	var sample *ds.Samples
@@ -84,8 +84,14 @@ func GetSampleByID(repository *repository.Repository, c *gin.Context) {
 }
 
 func CreateSample(repository *repository.Repository, c *gin.Context) {
+	// user_id, err := strconv.Atoi(c.Param("user_id"))
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, err)
+	// 	return
+	// }
+	user_id := 2
 	var sample *ds.Samples
-	// Достаем данные из JSON'а из запроса
+
 	if err := c.BindJSON(&sample); err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return
@@ -93,20 +99,24 @@ func CreateSample(repository *repository.Repository, c *gin.Context) {
 	fmt.Println(sample)
 
 	if sample.Name == "" || sample.Type == "" || sample.Sol_Sealed == 0 || sample.Current_Location == "" || sample.Sample_status == "" {
-		c.JSON(http.StatusBadRequest, "Oshibochka")
+		c.JSON(http.StatusBadRequest, "Ошибка, указаны неправильные данные для образца")
 	}
 
-	if err := repository.CreateSample(sample); err != nil {
-		c.JSON(http.StatusInternalServerError, err)
+	if err := repository.CreateSample(sample, user_id); err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{
-		"message": "Created",
-	})
+	c.JSON(http.StatusOK, "Образец успешно создан!")
 }
 
 func DeleteSampleByID(repository *repository.Repository, c *gin.Context) {
+	// user_id, err := strconv.Atoi(c.Param("user_id"))
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, err)
+	// 	return
+	// }
+	user_id := 2
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
@@ -116,34 +126,47 @@ func DeleteSampleByID(repository *repository.Repository, c *gin.Context) {
 
 	if id < 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Oshibochka id<0",
+			"message": "Ошибка id<0",
 		})
 		return
 	}
 
-	err = repository.DeleteSampleByID(id)
+	err = repository.DeleteSampleByID(id, user_id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
-	c.JSON(http.StatusOK, "Deleted!")
+	c.JSON(http.StatusOK, "Образец успешно удален!")
 }
 
 func UpdateSample(repository *repository.Repository, c *gin.Context) {
+	// user_id, err := strconv.Atoi(c.Param("user_id"))
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, err)
+	// 	return
+	// }
+	user_id := 2
+	Id_sample, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+	fmt.Println(Id_sample)
+
+	if Id_sample < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Ошибка id<0",
+		})
+		return
+	}
 	var jsonData map[string]interface{}
 	if err := c.BindJSON(&jsonData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	Id_sample, idOk := jsonData["Id_sample"].(float64)
+
 	Name, nameOk := jsonData["Name"].(string)
 	Type, typeOk := jsonData["Type"].(string)
-
-	fmt.Println(Id_sample, Name, Type)
-	if !idOk || Id_sample <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or missing Id_sample"})
-		return
-	}
 
 	candidate, err := repository.GetSampleByID(int(Id_sample))
 	if err != nil {
@@ -156,13 +179,39 @@ func UpdateSample(repository *repository.Repository, c *gin.Context) {
 	if typeOk {
 		candidate.Type = Type
 	}
-	err = repository.UpdateSample(candidate)
+	err = repository.UpdateSample(candidate, user_id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Sample updated successfully",
+		"message": "Образец успешно обновлен",
+	})
+}
+
+func AddSampleToMission(repository *repository.Repository, c *gin.Context) {
+	// user_id, err := strconv.Atoi(c.Param("user_id"))
+	// if err != nil {
+	// 	c.JSON(http.StatusInternalServerError, err)
+	// 	return
+	// }
+	user_id := 7
+	// Получаем Id_sample из параметра запроса
+	sampleID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Id_sample"})
+		return
+	}
+	// Вызываем функцию для добавления образца в последнюю миссию с Mission_status = "Draft"
+	mission, samples, err := repository.AddSampleToLastDraftMission(sampleID, user_id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	// Возвращаем JSON-ответ с деталями миссии и образцами
+	c.JSON(http.StatusOK, gin.H{
+		"mission": mission,
+		"samples": samples,
 	})
 }
