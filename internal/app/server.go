@@ -46,6 +46,26 @@ func (a *Application) StartServer() {
 		mission := api.Group("/mission")
 		{
 			//DONE
+			mission.GET("/get_all_missions", func(c *gin.Context) {
+				delivery.GetAllMissiions(a.repository, c)
+			})
+
+			//DONE
+			mission.GET("/get_mission/:id", func(c *gin.Context) {
+				delivery.GetMissionDetailByID(a.repository, c)
+			})
+
+			//DONE
+			mission.PUT("/update_mission/:id", func(c *gin.Context) {
+				delivery.UpdateMission(a.repository, c)
+			})
+
+			//DONE
+			mission.DELETE("/delete_mission/:id", func(c *gin.Context) {
+				delivery.DeleteMissionByID(a.repository, c)
+			})
+
+			//DONE
 			mission.DELETE("/delete_sample_from_last_mission/:id", func(c *gin.Context) {
 				delivery.RemoveSampleFromLastDraftMission(a.repository, c)
 			})
@@ -56,45 +76,13 @@ func (a *Application) StartServer() {
 			})
 
 			//DONE
-			mission.GET("/mission_detail/:id", func(c *gin.Context) {
-				delivery.GetMissionDetailByID(a.repository, c)
-			})
-
-			//DONE
-			mission.PUT("/update_mission", func(c *gin.Context) {
-				delivery.UpdateMission(a.repository, c)
-			})
-
-			//DONE
-			mission.DELETE("/delete_mission/:id", func(c *gin.Context) {
-				delivery.DeleteMissionByID(a.repository, c)
-			})
-
-			//DONE
-			mission.GET("/get_all_missions", func(c *gin.Context) {
-				delivery.GetAllMissiions(a.repository, c)
-			})
-
-			//DONE
-			mission.PUT("/update_mission_status_by_user", func(c *gin.Context) {
+			mission.PUT("/update_mission_status_by_user/:id", func(c *gin.Context) {
 				delivery.UpdateMissionStatusByUser(a.repository, c)
 			})
 
 			//DONE
-			mission.PUT("/update_mission_status_by_moderator", func(c *gin.Context) {
+			mission.PUT("/update_mission_status_by_moderator/:id", func(c *gin.Context) {
 				delivery.UpdateMissionStatusByModerator(a.repository, c)
-			})
-
-			mission.GET("/get_mission_by_user/:id", func(c *gin.Context) {
-				delivery.GetMissionByUserID(a.repository, c)
-			})
-
-			mission.GET("/get_mission_by_moderator/:id", func(c *gin.Context) {
-				delivery.GetMissionByModeratorID(a.repository, c)
-			})
-
-			mission.GET("/get_mission_by_status/:status", func(c *gin.Context) {
-				delivery.GetMissionByStatus(a.repository, c)
 			})
 		}
 

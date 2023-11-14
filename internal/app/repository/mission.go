@@ -28,17 +28,27 @@ func (repository *Repository) GetMissionByID(id int) (*ds.Missions, error) {
 	return mission, nil
 }
 
-func (r *Repository) DeleteMissionByID(id int) error {
+func (r *Repository) UpdateMission(mission *ds.Missions, id int, user_id int) error {
+	// Проверяем, что пользователь авторизирован
+	var user ds.Users
+	err := r.db.Table("users").Where("Id_user = ?", user_id).First(&user).Error
+	if err != nil {
+		return errors.New("Чтобы редактировать миссию, нужно авторизироваться")
+	}
+	updateErr := r.db.Where("Id_mission = ?", id).Updates(&mission).Error
+	return updateErr
+}
+
+func (r *Repository) DeleteMissionByID(id int, user_id int) error {
+	var user ds.Users
+	err := r.db.Table("users").Where("Id_user = ? AND Role = 'Moderator'", user_id).First(&user).Error
+	if err != nil {
+		return errors.New("Недостаточно прав для удаления миссии")
+	}
 	if err := r.db.Exec("UPDATE missions SET mission_status='Deleted' WHERE Id_mission= ?", id).Error; err != nil {
 		return err
 	}
 	return nil
-}
-
-func (r *Repository) UpdateMission(mission *ds.Missions) error {
-	err := r.db.Where("Id_mission = ?", mission.Id_mission).Updates(&mission).Error
-
-	return err
 }
 
 func (repository *Repository) GetMissioninDetailByID(id int) (*ds.Missions, []ds.Samples, error) {
@@ -67,37 +77,42 @@ func (repository *Repository) GetMissioninDetailByID(id int) (*ds.Missions, []ds
 	return mission, samples, nil
 }
 
-func (repository *Repository) GetMissionByUserID(id int) ([]ds.Missions, error) {
-	mission := []ds.Missions{}
-	err := repository.db.Where("User_id=?", id).Find(&mission).Error
+// func (repository *Repository) GetMissionByUserID(id int) ([]ds.Missions, error) {
+// 	mission := []ds.Missions{}
+// 	err := repository.db.Where("User_id=?", id).Find(&mission).Error
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return mission, nil
+// }
+
+// func (repository *Repository) GetMissionByModeratorID(id int) ([]ds.Missions, error) {
+// 	mission := []ds.Missions{}
+// 	err := repository.db.Where("Moderator_id=?", id).Find(&mission).Error
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return mission, nil
+// }
+
+// func (repository *Repository) GetMissionByStatus(status string) ([]ds.Missions, error) {
+// 	mission := []ds.Missions{}
+// 	err := repository.db.Where("Mission_status=?", status).Find(&mission).Error
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return mission, nil
+// }
+
+func (r *Repository) UpdateMissionStatusByUser(id int, newStatus string, user_id int) error {
+	var user ds.Users
+	err := r.db.Table("users").Where("Id_user = ? AND Role = 'User'", user_id).First(&user).Error
 	if err != nil {
-		return nil, err
+		return errors.New("Недостаточно прав для редактирования миссии")
 	}
-
-	return mission, nil
-}
-
-func (repository *Repository) GetMissionByModeratorID(id int) ([]ds.Missions, error) {
-	mission := []ds.Missions{}
-	err := repository.db.Where("Moderator_id=?", id).Find(&mission).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return mission, nil
-}
-
-func (repository *Repository) GetMissionByStatus(status string) ([]ds.Missions, error) {
-	mission := []ds.Missions{}
-	err := repository.db.Where("Mission_status=?", status).Find(&mission).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return mission, nil
-}
-
-func (r *Repository) UpdateMissionStatusByUser(id int, newStatus string) error {
 	// Проверяем, что новый статус допустим
 	allowedStatus := map[string]bool{
 		"Draft":                 true,
@@ -106,19 +121,24 @@ func (r *Repository) UpdateMissionStatusByUser(id int, newStatus string) error {
 	}
 
 	if !allowedStatus[newStatus] {
-		return errors.New("Invalid mission status")
+		return errors.New("Неправильный статус миссии")
 	}
 
 	// Обновляем статус миссии
-	err := r.db.Model(&ds.Missions{}).
+	updateErr := r.db.Model(&ds.Missions{}).
 		Where("Id_mission = ?", id).
 		Update("mission_status", newStatus).
 		Error
 
-	return err
+	return updateErr
 }
 
-func (r *Repository) UpdateMissionStatusByModerator(id int, newStatus string) error {
+func (r *Repository) UpdateMissionStatusByModerator(id int, newStatus string, user_id int) error {
+	var user ds.Users
+	err := r.db.Table("users").Where("Id_user = ? AND Role = 'Moderator'", user_id).First(&user).Error
+	if err != nil {
+		return errors.New("Недостаточно прав для редактирования миссии")
+	}
 	// Проверяем, что новый статус допустим
 	allowedStatus := map[string]bool{
 		"Completed": true,
@@ -127,36 +147,48 @@ func (r *Repository) UpdateMissionStatusByModerator(id int, newStatus string) er
 	}
 
 	if !allowedStatus[newStatus] {
-		return errors.New("Invalid mission status")
+		return errors.New("Неправильный статус миссии")
 	}
 
 	// Обновляем статус миссии
-	err := r.db.Model(&ds.Missions{}).
+	updateErr := r.db.Model(&ds.Missions{}).
 		Where("Id_mission = ?", id).
 		Update("mission_status", newStatus).
 		Error
 
-	return err
+	return updateErr
 }
-func (repository *Repository) RemoveSampleFromMission(missionID, sampleID uint) (*ds.Missions, []ds.Samples, error) {
+
+func (repository *Repository) RemoveSampleFromMission(missionID, sampleID uint, user_id int) (*ds.Missions, []ds.Samples, error) {
 	// Проверяем, существует ли миссия с указанным ID
 	var mission ds.Missions
-	if err := repository.db.First(&mission, missionID).Error; err != nil {
-		return nil, nil, err
+	if err := repository.db.Where("mission_status != ?", "Draft").First(&mission, missionID).Error; err != nil {
+		return nil, nil, errors.New("Нельзя удалять миссию со статусом Draft")
+	}
+
+	// Проверяем, что user_id совпадает с user_id из миссии
+	if mission.Moderator_id != user_id {
+		return nil, nil, errors.New("Недостаточно прав для редактирования этой миссии")
+	}
+
+	var user ds.Users
+	err := repository.db.Table("users").Where("Id_user = ? AND Role = 'Moderator'", user_id).First(&user).Error
+	if err != nil {
+		return nil, nil, errors.New("Недостаточно прав для редактирования миссии")
 	}
 
 	// Удаляем запись об образце из таблицы mission_samples
 	if err := repository.db.
-		Where("id_mission = ? AND id_sample = ?", missionID, sampleID).
+		Where("mission_id = ? AND sample_id = ?", missionID, sampleID).
 		Delete(&ds.Mission_samples{}).Error; err != nil {
 		return nil, nil, err
 	}
 
 	// Получаем все образцы в миссии после удаления
 	var samples []ds.Samples
-	err := repository.db.
-		Joins("JOIN mission_samples ON missions.id_mission = mission_samples.id_mission").
-		Joins("JOIN samples ON mission_samples.id_sample = samples.id_sample").
+	removeErr := repository.db.
+		Joins("JOIN mission_samples ON missions.id_mission = mission_samples.mission_id").
+		Joins("JOIN samples ON mission_samples.sample_id = samples.id_sample").
 		Where("missions.id_mission = ?", missionID).
 		Table("missions").
 		Select("missions.*, samples.*").
@@ -164,13 +196,18 @@ func (repository *Repository) RemoveSampleFromMission(missionID, sampleID uint) 
 		Error
 
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, removeErr
 	}
 
 	return &mission, samples, nil
 }
 
-func (repository *Repository) RemoveSampleFromLastDraftMission(sampleID int) (*ds.Missions, []ds.Samples, error) {
+func (repository *Repository) RemoveSampleFromLastDraftMission(sampleID int, user_id int) (*ds.Missions, []ds.Samples, error) {
+	var user ds.Users
+	err := repository.db.Table("users").Where("Id_user = ? AND Role = 'User'", user_id).First(&user).Error
+	if err != nil {
+		return nil, nil, errors.New("Недостаточно прав для редактирования миссии")
+	}
 	// Находим последнюю миссию с mission_status = "Draft"
 	var lastDraftMission ds.Missions
 	dbErr := repository.db.
@@ -185,27 +222,38 @@ func (repository *Repository) RemoveSampleFromLastDraftMission(sampleID int) (*d
 
 	// Если миссии с mission_status = "Draft" нет, возвращаем ошибку
 	if errors.Is(dbErr, gorm.ErrRecordNotFound) {
-		return nil, nil, errors.New("no draft mission found")
+		return nil, nil, errors.New("Миссия со статусом Draft не найдена")
+	}
+
+	// Получаем миссию по lastDraftMission.Id_mission
+	var missionWithUserID ds.Missions
+	if err := repository.db.First(&missionWithUserID, lastDraftMission.Id_mission).Error; err != nil {
+		return nil, nil, err
+	}
+
+	// Сравниваем user_id из миссии с переданным user_id
+	if missionWithUserID.User_id != user_id {
+		return nil, nil, errors.New("Недостаточно прав для удаления образца из миссии")
 	}
 
 	// Удаляем образец из миссии
-	if err := repository.db.Exec("DELETE FROM mission_samples WHERE id_mission = ? AND id_sample = ?", lastDraftMission.Id_mission, sampleID).Error; err != nil {
+	if err := repository.db.Exec("DELETE FROM mission_samples WHERE mission_id = ? AND sample_id = ?", lastDraftMission.Id_mission, sampleID).Error; err != nil {
 		return nil, nil, err
 	}
 
 	// Получаем все образцы в миссии после удаления
 	var samples []ds.Samples
-	err := repository.db.
-		Joins("JOIN mission_samples ON missions.id_mission = mission_samples.id_mission").
-		Joins("JOIN samples ON mission_samples.id_sample = samples.id_sample").
+	removeErr := repository.db.
+		Joins("JOIN mission_samples ON missions.id_mission = mission_samples.mission_id").
+		Joins("JOIN samples ON mission_samples.sample_id = samples.id_sample").
 		Where("missions.id_mission = ?", lastDraftMission.Id_mission).
 		Table("missions").
 		Select("missions.*, samples.*").
 		Find(&samples).
 		Error
 
-	if err != nil {
-		return nil, nil, err
+	if removeErr != nil {
+		return nil, nil, removeErr
 	}
 
 	return &lastDraftMission, samples, nil
