@@ -12,53 +12,16 @@ import (
 
 func GetAllSamples(repository *repository.Repository, c *gin.Context) {
 	var sample []ds.Samples
-	sample, err := repository.GetAllSamples()
+
+	name := c.DefaultQuery("name", "")
+
+	sample, err := repository.GetAllSamples(name)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusOK, sample)
 }
-
-// func GetAllSamplesOrderByType(repository *repository.Repository, c *gin.Context) {
-// 	var sample []ds.Samples
-// 	sample, err := repository.GetAllSamplesOrderByType()
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, err)
-// 		return
-// 	}
-// 	c.JSON(http.StatusOK, sample)
-// }
-
-// func GetAllSamplesOrderByDate(repository *repository.Repository, c *gin.Context) {
-// 	var sample []ds.Samples
-// 	sample, err := repository.GetAllSamplesOrderByDate()
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, err)
-// 		return
-// 	}
-// 	c.JSON(http.StatusOK, sample)
-// }
-
-// func GetAllSamplesStatusActive(repository *repository.Repository, c *gin.Context) {
-// 	var sample []ds.Samples
-// 	sample, err := repository.GetAllSamplesStatusActive()
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, err)
-// 		return
-// 	}
-// 	c.JSON(http.StatusOK, sample)
-// }
-
-// func GetAllSamplesStatusDaleted(repository *repository.Repository, c *gin.Context) {
-// 	var sample []ds.Samples
-// 	sample, err := repository.GetAllSamplesStatusDeleted()
-// 	if err != nil {
-// 		c.JSON(http.StatusInternalServerError, err)
-// 		return
-// 	}
-// 	c.JSON(http.StatusOK, sample)
-// }
 
 func GetSampleByID(repository *repository.Repository, c *gin.Context) {
 	var sample *ds.Samples
