@@ -15,8 +15,9 @@ func GetAllSamples(repository *repository.Repository, c *gin.Context) {
 	var sample []ds.Samples
 
 	name := c.DefaultQuery("name", "")
+	rockType := c.DefaultQuery("rockType", "")
 
-	sample, err := repository.GetAllSamples(name)
+	sample, err := repository.GetAllSamples(name, rockType)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return

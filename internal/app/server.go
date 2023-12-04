@@ -4,12 +4,20 @@ import (
 	"MSRM/internal/app/delivery"
 	"log"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
 
 func (a *Application) StartServer() {
 	router := gin.Default()
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"}, // List of allowed origins
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Content-Type", "Authorization"},
+		AllowCredentials: true, // Enable credentials (e.g., cookies)
+	}))
 
 	user := router.Group("/user")
 	{
@@ -28,6 +36,7 @@ func (a *Application) StartServer() {
 
 	api := router.Group("/api")
 	{
+
 		user := api.Group("/user")
 		{
 			user.DELETE("/delete_user/:id", func(c *gin.Context) {

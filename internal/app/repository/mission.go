@@ -28,6 +28,22 @@ func (repository *Repository) GetAllMissionsByDateRange(startDate, endDate time.
 	return missions, nil
 }
 
+// func (r *Repository) GetAllUserMissions(user_id int) ([]ds.Missions, error) {
+// 	var user ds.Users
+// 	err := r.db.Table("users").Where("Id_user = ?", user_id).First(&user).Error
+// 	if err != nil {
+// 		return nil, errors.New("Чтобы отобразить все миссии пользователя, нужно авторизоваться")
+// 	}
+
+// 	var missions []ds.Missions
+// 	err = r.db.Find(&missions, "user_id = ?", user_id).Error
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return missions, nil
+// }
+
 func (repository *Repository) GetMissionByID(id int) (*ds.Missions, error) {
 	mission := &ds.Missions{}
 
@@ -42,11 +58,11 @@ func (repository *Repository) GetMissionByID(id int) (*ds.Missions, error) {
 func (r *Repository) UpdateMission(mission *ds.Missions, id int, user_id int) error {
 	// Проверяем, что пользователь авторизирован
 	var user ds.Users
-	err := r.db.Table("users").Where("Id_user = ?", user_id).First(&user).Error
+	err := r.db.Table("users").Where("Id_user = ? AND Role = 'Moderator'", user_id).First(&user).Error
 	if err != nil {
-		return errors.New("Чтобы редактировать миссию, нужно авторизироваться")
+		return errors.New("Недостаточно прав для редактирования миссии")
 	}
-	updateErr := r.db.Where("Id_mission = ?", id).Updates(&mission).Error
+	updateErr := r.db.Where("Id_mission = ? AND user_id = ?", id, user_id).Updates(&mission).Error
 	return updateErr
 }
 
@@ -74,8 +90,8 @@ func (repository *Repository) GetMissioninDetailByID(id int) (*ds.Missions, []ds
 
 	// Retrieve associated samples
 	err = repository.db.
-		Joins("JOIN mission_samples ON missions.id_mission = mission_samples.id_mission").
-		Joins("JOIN samples ON mission_samples.id_sample = samples.id_sample").
+		Joins("JOIN mission_samples ON missions.id_mission = mission_samples.mission_id").
+		Joins("JOIN samples ON mission_samples.sample_id = samples.id_sample").
 		Where("missions.id_mission = ?", id).
 		Table("missions"). // Add this line to specify the table name
 		Select("missions.*, samples.*").
@@ -94,6 +110,13 @@ func (r *Repository) UpdateMissionStatusByUser(id int, newStatus string, user_id
 	if err != nil {
 		return errors.New("Недостаточно прав для редактирования миссии")
 	}
+
+	var currentStatus string
+	err = r.db.Table("missions").Where("Id_mission = ? AND user_id = ?", id, user_id).Pluck("mission_status", &currentStatus).Error
+	if err != nil {
+		return errors.New("Не удалось получить текущий статус миссии")
+	}
+
 	// Проверяем, что новый статус допустим
 	allowedStatus := map[string]bool{
 		"Draft":                 true,
@@ -105,9 +128,18 @@ func (r *Repository) UpdateMissionStatusByUser(id int, newStatus string, user_id
 		return errors.New("Неправильный статус миссии")
 	}
 
+	switch currentStatus {
+	case "Draft":
+		if !(newStatus == "Awaiting confirmation" || newStatus == "Deleted") {
+			return errors.New("Нельзя изменить статус Draft на " + newStatus)
+		}
+	case "Deleted":
+		return errors.New("Нельзя изменить статус Deleted")
+	}
+
 	// Обновляем статус миссии
 	updateErr := r.db.Model(&ds.Missions{}).
-		Where("Id_mission = ?", id).
+		Where("Id_mission = ? AND user_id = ?", id, user_id).
 		Update("mission_status", newStatus).
 		Error
 
@@ -120,11 +152,31 @@ func (r *Repository) UpdateMissionStatusByModerator(id int, newStatus string, us
 	if err != nil {
 		return errors.New("Недостаточно прав для редактирования миссии")
 	}
+
+	var currentStatus string
+	err = r.db.Table("missions").Where("Id_mission = ? AND moderator_id = ?", id, user_id).Pluck("mission_status", &currentStatus).Error
+	if err != nil {
+		return errors.New("Не удалось получить текущий статус миссии")
+	}
+
 	// Проверяем, что новый статус допустим
 	allowedStatus := map[string]bool{
 		"Completed": true,
 		"Rejected":  true,
 		"At work":   true,
+	}
+
+	switch currentStatus {
+	case "Awaiting confirmation":
+		if !(newStatus == "At work" || newStatus == "Rejected") {
+			return errors.New("Нельзя изменить статус Awaiting confirmation на " + newStatus)
+		}
+	case "Draft":
+		return errors.New("Нельзя изменить статус Draft")
+	case "At work":
+		if !(newStatus == "Completed" || newStatus == "Rejected") {
+			return errors.New("Нельзя изменить статус At work на " + newStatus)
+		}
 	}
 
 	if !allowedStatus[newStatus] {
@@ -133,7 +185,7 @@ func (r *Repository) UpdateMissionStatusByModerator(id int, newStatus string, us
 
 	// Обновляем статус миссии
 	updateErr := r.db.Model(&ds.Missions{}).
-		Where("Id_mission = ?", id).
+		Where("Id_mission = ? AND moderator_id = ?", id, user_id).
 		Update("mission_status", newStatus).
 		Error
 
@@ -193,7 +245,7 @@ func (repository *Repository) RemoveSampleFromLastDraftMission(sampleID int, use
 	var lastDraftMission ds.Missions
 	dbErr := repository.db.
 		Order("formation_date desc").
-		Where("mission_status = ?", "Draft").
+		Where("mission_status = ? AND user_id = ?", "Draft", user_id).
 		First(&lastDraftMission).
 		Error
 
@@ -206,16 +258,16 @@ func (repository *Repository) RemoveSampleFromLastDraftMission(sampleID int, use
 		return nil, nil, errors.New("Миссия со статусом Draft не найдена")
 	}
 
-	// Получаем миссию по lastDraftMission.Id_mission
-	var missionWithUserID ds.Missions
-	if err := repository.db.First(&missionWithUserID, lastDraftMission.Id_mission).Error; err != nil {
-		return nil, nil, err
-	}
+	// // Получаем миссию по lastDraftMission.Id_mission
+	// var missionWithUserID ds.Missions
+	// if err := repository.db.First(&missionWithUserID, lastDraftMission.Id_mission).Error; err != nil {
+	// 	return nil, nil, err
+	// }
 
-	// Сравниваем user_id из миссии с переданным user_id
-	if missionWithUserID.User_id != user_id {
-		return nil, nil, errors.New("Недостаточно прав для удаления образца из миссии")
-	}
+	// // Сравниваем user_id из миссии с переданным user_id
+	// if missionWithUserID.User_id != user_id {
+	// 	return nil, nil, errors.New("Недостаточно прав для удаления образца из миссии")
+	// }
 
 	// Удаляем образец из миссии
 	if err := repository.db.Exec("DELETE FROM mission_samples WHERE mission_id = ? AND sample_id = ?", lastDraftMission.Id_mission, sampleID).Error; err != nil {

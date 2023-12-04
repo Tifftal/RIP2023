@@ -21,11 +21,20 @@ func (repository *Repository) GetSampleByID(id int) (*ds.Samples, error) {
 	return sample, nil
 }
 
-func (repository *Repository) GetAllSamples(name string) ([]ds.Samples, error) {
+func (repository *Repository) GetAllSamples(name, rockType string) ([]ds.Samples, error) {
 	name = "%" + name + "%"
+	rockType = "%" + rockType + "%"
+
 	var sample []ds.Samples
 
-	err := repository.db.Table("samples").Where(`("sample_status" = 'Active') AND LOWER("name") LIKE LOWER(?)`, name).Find(&sample).Error
+	query := repository.db.Table("samples").
+		Where(`("sample_status" = 'Active') AND LOWER("name") LIKE LOWER(?)`, name)
+
+	if rockType != "" {
+		query = query.Where(`LOWER("rock_type") LIKE LOWER(?)`, rockType)
+	}
+
+	err := query.Find(&sample).Error
 
 	return sample, err
 }

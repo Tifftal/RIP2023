@@ -82,7 +82,7 @@ func UpdateMission(repository *repository.Repository, c *gin.Context) {
 	// 	c.JSON(http.StatusInternalServerError, err)
 	// 	return
 	// }
-	user_id := 2
+	user_id := 10
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -288,7 +288,7 @@ func RemoveSampleFromMission(repository *repository.Repository, c *gin.Context) 
 }
 
 func RemoveSampleFromLastDraftMission(repository *repository.Repository, c *gin.Context) {
-	user_id := 1
+	user_id := 5
 	sampleID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Id_sample"})
