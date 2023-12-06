@@ -11,7 +11,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func GetAllMissiions(repository *repository.Repository, c *gin.Context) {
+// @Summary Получение списка миссий
+// @Description Возвращает список всех миссий или миссий в указанном диапазоне дат
+// @Accept json
+// @Produce json
+// @Tags Missions
+// @Param start_date query string false "Дата начала в формате YYYY-MM-DD (необязательно)"
+// @Param end_date query string false "Дата окончания в формате YYYY-MM-DD (необязательно)"
+// @Success 200 {object} string "Список миссий"
+// @Failure 400 {object} string "Неверный запрос или ошибка в формате дат"
+// @Failure 500 {object} string "Внутренняя ошибка сервера"
+// @Router /api/mission/ [get]
+// @Security JwtAuth
+func GetAllMissiions(repository *repository.Repository, c *gin.Context, user_id int) {
 	startDateString := c.Query("start_date")
 	endDateString := c.Query("end_date")
 
@@ -34,7 +46,7 @@ func GetAllMissiions(repository *repository.Repository, c *gin.Context) {
 
 	// Если start_date и end_date не указаны, вызывайте функцию для получения всех миссий
 	if startDateString == "" && endDateString == "" {
-		mission, err := repository.GetAllMissions()
+		mission, err := repository.GetAllMissions(user_id)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, err)
 			return
@@ -44,7 +56,7 @@ func GetAllMissiions(repository *repository.Repository, c *gin.Context) {
 	}
 
 	// Иначе вызывайте функцию для получения миссий с фильтрацией по дате
-	mission, err := repository.GetAllMissionsByDateRange(startDate, endDate)
+	mission, err := repository.GetAllMissionsByDateRange(startDate, endDate, user_id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return
@@ -52,8 +64,57 @@ func GetAllMissiions(repository *repository.Repository, c *gin.Context) {
 	c.JSON(http.StatusOK, mission)
 }
 
-func DeleteMissionByID(repository *repository.Repository, c *gin.Context) {
-	user_id := 2
+// @Summary Получение деталей миссии по идентификатору
+// @Description Получение информации о миссии и связанных образцах
+// @Tags Missions
+// @Accept json
+// @Produce json
+// @Param id path int true "Идентификатор миссии"
+// @Security JwtAuth
+// @Success 200 {object} string "Детали миссии и образцы"
+// @Failure 400 {object} string "Неверный запрос"
+// @Failure 500 {object} string "Внутренняя ошибка сервера"
+// @Router /api/mission/{id} [get]
+func GetMissionDetailByID(repository *repository.Repository, c *gin.Context, user_id int) {
+	var mission *ds.Missions
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if id < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Invalid ID (id < 0)",
+		})
+		return
+	}
+
+	mission, samples, err := repository.GetMissioninDetailByID(id, user_id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Return JSON response with mission details and associated samples
+	c.JSON(http.StatusOK, gin.H{
+		"mission": mission,
+		"samples": samples,
+	})
+}
+
+// @Summary Удаление миссии по идентификатору
+// @Description Удаление миссии по указанному идентификатору
+// @Tags Missions
+// @Accept json
+// @Produce json
+// @Param id path int true "Идентификатор миссии"
+// @Security JwtAuth
+// @Success 200 {string} string "Миссия успешно удалена"
+// @Failure 400 {object} string "Ошибка запроса"
+// @Failure 500 {object} string "Внутренняя ошибка сервера"
+// @Router /api/mission/delete/{id} [delete]
+func DeleteMissionByID(repository *repository.Repository, c *gin.Context, user_id int) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
@@ -76,14 +137,18 @@ func DeleteMissionByID(repository *repository.Repository, c *gin.Context) {
 	c.JSON(http.StatusOK, "Миссия успешно удалена!")
 }
 
-func UpdateMission(repository *repository.Repository, c *gin.Context) {
-	// user_id, err := strconv.Atoi(c.Param("user_id"))
-	// if err != nil {
-	// 	c.JSON(http.StatusInternalServerError, err)
-	// 	return
-	// }
-	user_id := 10
-
+// @Summary Обновление информации о миссии
+// @Description Обновление данных миссии по её идентификатору
+// @Tags Missions
+// @Accept json
+// @Produce json
+// @Param id path int true "Идентификатор миссии"
+// @Param missionData body classes.UpdateMission true "Данные для редактирования миссии"
+// @Security JwtAuth
+// @Success 200 {object} string "Миссия успешно обновлена"
+// @Failure 400 {object} string "Ошибка запроса"
+// @Router /api/mission/update/{id} [put]
+func UpdateMission(repository *repository.Repository, c *gin.Context, user_id int) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
@@ -104,10 +169,6 @@ func UpdateMission(repository *repository.Repository, c *gin.Context) {
 		candidate.Name = Name
 	}
 
-	if moderator, moderatorOk := jsonData["Moderator_id"].(float64); moderatorOk {
-		candidate.Moderator_id = int(moderator)
-	}
-
 	if formationDateStr, formationOk := jsonData["Formation_date"].(string); formationOk {
 		parsedTime, parseErr := time.Parse("2006-01-02", formationDateStr)
 		if parseErr != nil {
@@ -115,18 +176,7 @@ func UpdateMission(repository *repository.Repository, c *gin.Context) {
 			fmt.Println("Ошибка парсинга времени:", parseErr)
 		} else {
 			// Присваиваем его полю в вашей структуре
-			candidate.Formation_date = parsedTime
-		}
-	}
-
-	if creationDateStr, creationOk := jsonData["Creation_date"].(string); creationOk {
-		parsedTime, parseErr := time.Parse("2006-01-02", creationDateStr)
-		if parseErr != nil {
-			// Обработка ошибки парсинга времени
-			fmt.Println("Ошибка парсинга Creation_date:", parseErr)
-		} else {
-			// Присваиваем его полю в вашей структуре
-			candidate.Creation_date = parsedTime
+			candidate.Formation_date = &parsedTime
 		}
 	}
 
@@ -137,7 +187,7 @@ func UpdateMission(repository *repository.Repository, c *gin.Context) {
 			fmt.Println("Ошибка парсинга Completion_date:", parseErr)
 		} else {
 			// Присваиваем его полю в вашей структуре
-			candidate.Completion_date = parsedTime
+			candidate.Completion_date = &parsedTime
 		}
 	}
 
@@ -154,37 +204,18 @@ func UpdateMission(repository *repository.Repository, c *gin.Context) {
 	})
 }
 
-func GetMissionDetailByID(repository *repository.Repository, c *gin.Context) {
-	var mission *ds.Missions
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	if id < 0 {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Invalid ID (id < 0)",
-		})
-		return
-	}
-
-	mission, samples, err := repository.GetMissioninDetailByID(id)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Return JSON response with mission details and associated samples
-	c.JSON(http.StatusOK, gin.H{
-		"mission": mission,
-		"samples": samples,
-	})
-}
-
-// UpdateMissionStatus обновляет статус миссии.
-func UpdateMissionStatusByUser(repository *repository.Repository, c *gin.Context) {
-	user_id := 1
+// @Summary Обновление статуса миссии пользователем
+// @Description Обновляет статус миссии по её идентификатору
+// @Tags Missions
+// @Accept json
+// @Produce json
+// @Param id path int true "Идентификатор миссии"
+// @Param body body classes.UpdateMissionStatus true "Данные для обновления статуса миссии"
+// @Security JwtAuth
+// @Success 200 {object} string "Статус миссии успешно изменен"
+// @Failure 400 {object} string "Ошибка запроса"
+// @Router /api/mission/status_by_user/{id} [put]
+func UpdateMissionStatusByUser(repository *repository.Repository, c *gin.Context, user_id int) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -221,8 +252,19 @@ func UpdateMissionStatusByUser(repository *repository.Repository, c *gin.Context
 
 	c.JSON(http.StatusOK, gin.H{"message": "Статус миссии успешно изменен"})
 }
-func UpdateMissionStatusByModerator(repository *repository.Repository, c *gin.Context) {
-	user_id := 2
+
+// @Summary Обновление статуса миссии модератором
+// @Description Обновляет статус миссии по её идентификатору
+// @Tags Missions
+// @Accept json
+// @Produce json
+// @Param id path int true "Идентификатор миссии"
+// @Param body body classes.UpdateMissionStatus true "Данные для обновления статуса миссии"
+// @Security JwtAuth
+// @Success 200 {object} string "Статус миссии успешно изменен"
+// @Failure 400 {object} string "Ошибка запроса"
+// @Router /api/mission/status_by_moderator/{id} [put]
+func UpdateMissionStatusByModerator(repository *repository.Repository, c *gin.Context, user_id int) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -260,35 +302,18 @@ func UpdateMissionStatusByModerator(repository *repository.Repository, c *gin.Co
 	c.JSON(http.StatusOK, gin.H{"message": "Статус миссии успешно изменен"})
 }
 
-func RemoveSampleFromMission(repository *repository.Repository, c *gin.Context) {
-	user_id := 2
-	// Получаем Id_mission и Id_sample из параметров запроса
-	missionID, err := strconv.Atoi(c.Param("mission_id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Id_mission"})
-		return
-	}
-
-	sampleID, err := strconv.Atoi(c.Param("sample_id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Id_sample"})
-		return
-	}
-
-	mission, samples, err := repository.RemoveSampleFromMission(uint(missionID), uint(sampleID), user_id)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-	// Возвращаем JSON-ответ с деталями миссии и образцами
-	c.JSON(http.StatusOK, gin.H{
-		"mission": mission,
-		"samples": samples,
-	})
-}
-
-func RemoveSampleFromLastDraftMission(repository *repository.Repository, c *gin.Context) {
-	user_id := 5
+// @Summary Удаление образца из последней черновой миссии
+// @Description Удаление образца из последней черновой миссии пользователя
+// @Tags Missions
+// @Accept json
+// @Produce json
+// @Param id path int true "Идентификатор образца"
+// @Security JwtAuth
+// @Success 200 {object} map[string]interface{} "Информация о миссии и образцах"
+// @Failure 400 {object} string "Ошибка запроса"
+// @Failure 500 {object} string "Внутренняя ошибка сервера"
+// @Router /api/mission/delete_from_last/{id} [delete]
+func RemoveSampleFromLastDraftMission(repository *repository.Repository, c *gin.Context, user_id int) {
 	sampleID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Id_sample"})

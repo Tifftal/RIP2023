@@ -8,41 +8,57 @@ import (
 	"gorm.io/gorm"
 )
 
-func (repository *Repository) GetAllMissions() ([]ds.Missions, error) {
-	mission := []ds.Missions{}
-	err := repository.db.Order("formation_date ASC").Find(&mission).Error
+func (repository *Repository) GetAllMissions(user_id int) ([]ds.Missions, error) {
+	missions := []ds.Missions{}
+	var user ds.Users
+	err := repository.db.Table("users").Where("Id_user = ? AND (Role = 'Moderator' OR Role = 'User')", user_id).First(&user).Error
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Недостаточно прав для просмотра миссии")
 	}
 
-	return mission, nil
-}
+	if repository.db.Table("users").Where("Id_user = ? AND Role = 'User'", user_id).First(&user).RowsAffected > 0 {
+		err := repository.db.Where("user_id = ?", user_id).Order("formation_date ASC").Find(&missions).Error
+		if err != nil {
+			return nil, err
+		}
+	}
 
-func (repository *Repository) GetAllMissionsByDateRange(startDate, endDate time.Time) ([]ds.Missions, error) {
-	missions := []ds.Missions{}
-	err := repository.db.Where("formation_date BETWEEN ? AND ?", startDate, endDate).Order("formation_date ASC").Find(&missions).Error
-	if err != nil {
-		return nil, err
+	if repository.db.Table("users").Where("Id_user = ? AND Role = 'Moderator'", user_id).First(&user).RowsAffected > 0 {
+		err := repository.db.Where("moderator_id = ?", user_id).Order("formation_date ASC").Find(&missions).Error
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return missions, nil
 }
 
-// func (r *Repository) GetAllUserMissions(user_id int) ([]ds.Missions, error) {
-// 	var user ds.Users
-// 	err := r.db.Table("users").Where("Id_user = ?", user_id).First(&user).Error
-// 	if err != nil {
-// 		return nil, errors.New("Чтобы отобразить все миссии пользователя, нужно авторизоваться")
-// 	}
+func (repository *Repository) GetAllMissionsByDateRange(startDate, endDate time.Time, user_id int) ([]ds.Missions, error) {
+	missions := []ds.Missions{}
+	var user ds.Users
+	err := repository.db.Table("users").Where("Id_user = ? AND (Role = 'Moderator' OR Role = 'User')", user_id).First(&user).Error
+	if err != nil {
+		return nil, errors.New("Недостаточно прав для просмотра миссии")
+	}
 
-// 	var missions []ds.Missions
-// 	err = r.db.Find(&missions, "user_id = ?", user_id).Error
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	// Для пользователя с ролью 'User'
+	if err := repository.db.Table("users").Where("Id_user = ? AND Role = 'User'", user_id).First(&user).Error; err == nil {
+		err := repository.db.Where("formation_date BETWEEN ? AND ? AND user_id = ?", startDate, endDate, user_id).Order("formation_date ASC").Find(&missions).Error
+		if err != nil {
+			return nil, err
+		}
+	}
 
-// 	return missions, nil
-// }
+	// Для пользователя с ролью 'Moderator'
+	if err := repository.db.Table("users").Where("Id_user = ? AND Role = 'Moderator'", user_id).First(&user).Error; err == nil {
+		err := repository.db.Where("formation_date BETWEEN ? AND ? AND moderator_id = ?", startDate, endDate, user_id).Order("formation_date ASC").Find(&missions).Error
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return missions, nil
+}
 
 func (repository *Repository) GetMissionByID(id int) (*ds.Missions, error) {
 	mission := &ds.Missions{}
@@ -62,13 +78,25 @@ func (r *Repository) UpdateMission(mission *ds.Missions, id int, user_id int) er
 	if err != nil {
 		return errors.New("Недостаточно прав для редактирования миссии")
 	}
-	updateErr := r.db.Where("Id_mission = ? AND user_id = ?", id, user_id).Updates(&mission).Error
+
+	// Проверяем, что миссия существует и принадлежит пользователю
+	err = r.db.Table("missions").
+		Where("id_mission = ? AND moderator_id = ?", id, user_id).
+		First(&ds.Missions{}).Error
+
+	if err != nil {
+		return errors.New("Эта миссия не принадлежит вам")
+	}
+
+	// Теперь обновляем миссию
+	updateErr := r.db.Where("Id_mission = ? AND moderator_id = ?", id, user_id).Updates(&mission).Error
 	return updateErr
+
 }
 
 func (r *Repository) DeleteMissionByID(id int, user_id int) error {
 	var user ds.Users
-	err := r.db.Table("users").Where("Id_user = ? AND Role = 'Moderator'", user_id).First(&user).Error
+	err := r.db.Table("users").Where("Id_user = ? AND Role = 'User'", user_id).First(&user).Error
 	if err != nil {
 		return errors.New("Недостаточно прав для удаления миссии")
 	}
@@ -78,22 +106,34 @@ func (r *Repository) DeleteMissionByID(id int, user_id int) error {
 	return nil
 }
 
-func (repository *Repository) GetMissioninDetailByID(id int) (*ds.Missions, []ds.Samples, error) {
+func (repository *Repository) GetMissioninDetailByID(id int, user_id int) (*ds.Missions, []ds.Samples, error) {
 	mission := &ds.Missions{}
 	samples := []ds.Samples{}
+	var user ds.Users
 
-	// Retrieve mission details
-	err := repository.db.First(mission, "Id_mission = ?", id).Error
+	err := repository.db.Table("users").
+		Where("Id_user = ? AND (Role = 'Moderator' OR Role = 'User')", user_id).
+		First(&user).Error
+
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.New("Недостаточно прав для редактирования миссии")
 	}
 
-	// Retrieve associated samples
+	// Проверка, принадлежит ли миссия пользователю или он модератор
+	err = repository.db.Table("missions").
+		Where("id_mission = ? AND (user_id = ? OR moderator_id = ?)", id, user_id, user_id).
+		First(&mission).Error
+
+	if err != nil {
+		return nil, nil, errors.New("Эта миссия не принадлежит вам")
+	}
+
+	// Выборка связанных образцов
 	err = repository.db.
 		Joins("JOIN mission_samples ON missions.id_mission = mission_samples.mission_id").
 		Joins("JOIN samples ON mission_samples.sample_id = samples.id_sample").
 		Where("missions.id_mission = ?", id).
-		Table("missions"). // Add this line to specify the table name
+		Table("missions").
 		Select("missions.*, samples.*").
 		Find(&samples).Error
 
@@ -166,6 +206,10 @@ func (r *Repository) UpdateMissionStatusByModerator(id int, newStatus string, us
 		"At work":   true,
 	}
 
+	if !allowedStatus[newStatus] {
+		return errors.New("Неправильный статус миссии")
+	}
+
 	switch currentStatus {
 	case "Awaiting confirmation":
 		if !(newStatus == "At work" || newStatus == "Rejected") {
@@ -192,49 +236,6 @@ func (r *Repository) UpdateMissionStatusByModerator(id int, newStatus string, us
 	return updateErr
 }
 
-func (repository *Repository) RemoveSampleFromMission(missionID, sampleID uint, user_id int) (*ds.Missions, []ds.Samples, error) {
-	// Проверяем, существует ли миссия с указанным ID
-	var mission ds.Missions
-	if err := repository.db.Where("mission_status != ?", "Draft").First(&mission, missionID).Error; err != nil {
-		return nil, nil, errors.New("Нельзя удалять миссию со статусом Draft")
-	}
-
-	// Проверяем, что user_id совпадает с user_id из миссии
-	if mission.Moderator_id != user_id {
-		return nil, nil, errors.New("Недостаточно прав для редактирования этой миссии")
-	}
-
-	var user ds.Users
-	err := repository.db.Table("users").Where("Id_user = ? AND Role = 'Moderator'", user_id).First(&user).Error
-	if err != nil {
-		return nil, nil, errors.New("Недостаточно прав для редактирования миссии")
-	}
-
-	// Удаляем запись об образце из таблицы mission_samples
-	if err := repository.db.
-		Where("mission_id = ? AND sample_id = ?", missionID, sampleID).
-		Delete(&ds.Mission_samples{}).Error; err != nil {
-		return nil, nil, err
-	}
-
-	// Получаем все образцы в миссии после удаления
-	var samples []ds.Samples
-	removeErr := repository.db.
-		Joins("JOIN mission_samples ON missions.id_mission = mission_samples.mission_id").
-		Joins("JOIN samples ON mission_samples.sample_id = samples.id_sample").
-		Where("missions.id_mission = ?", missionID).
-		Table("missions").
-		Select("missions.*, samples.*").
-		Find(&samples).
-		Error
-
-	if err != nil {
-		return nil, nil, removeErr
-	}
-
-	return &mission, samples, nil
-}
-
 func (repository *Repository) RemoveSampleFromLastDraftMission(sampleID int, user_id int) (*ds.Missions, []ds.Samples, error) {
 	var user ds.Users
 	err := repository.db.Table("users").Where("Id_user = ? AND Role = 'User'", user_id).First(&user).Error
@@ -257,17 +258,6 @@ func (repository *Repository) RemoveSampleFromLastDraftMission(sampleID int, use
 	if errors.Is(dbErr, gorm.ErrRecordNotFound) {
 		return nil, nil, errors.New("Миссия со статусом Draft не найдена")
 	}
-
-	// // Получаем миссию по lastDraftMission.Id_mission
-	// var missionWithUserID ds.Missions
-	// if err := repository.db.First(&missionWithUserID, lastDraftMission.Id_mission).Error; err != nil {
-	// 	return nil, nil, err
-	// }
-
-	// // Сравниваем user_id из миссии с переданным user_id
-	// if missionWithUserID.User_id != user_id {
-	// 	return nil, nil, errors.New("Недостаточно прав для удаления образца из миссии")
-	// }
 
 	// Удаляем образец из миссии
 	if err := repository.db.Exec("DELETE FROM mission_samples WHERE mission_id = ? AND sample_id = ?", lastDraftMission.Id_mission, sampleID).Error; err != nil {

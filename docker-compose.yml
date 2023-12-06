@@ -30,10 +30,20 @@ services:
     volumes:
       - minio-data:/data
     command: server /data
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - '6379:6379'
+    command: redis-server --save 20 1 --loglevel warning --requirepass password
+    volumes:
+      - redis-data:/data
 
 volumes:
   # часть настроек для хранения данных
   postgresdb-data:
     driver: local
   minio-data:
+    driver: local
+  redis-data:
     driver: local

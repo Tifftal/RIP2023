@@ -1,0 +1,925 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/api/mission/": {
+            "get": {
+                "security": [
+                    {
+                        "JwtAuth": []
+                    }
+                ],
+                "description": "Возвращает список всех миссий или миссий в указанном диапазоне дат",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Missions"
+                ],
+                "summary": "Получение списка миссий",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Дата начала в формате YYYY-MM-DD (необязательно)",
+                        "name": "start_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Дата окончания в формате YYYY-MM-DD (необязательно)",
+                        "name": "end_date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список миссий",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос или ошибка в формате дат",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/mission/delete/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "JwtAuth": []
+                    }
+                ],
+                "description": "Удаление миссии по указанному идентификатору",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Missions"
+                ],
+                "summary": "Удаление миссии по идентификатору",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор миссии",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Миссия успешно удалена",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка запроса",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/mission/delete_from_last/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "JwtAuth": []
+                    }
+                ],
+                "description": "Удаление образца из последней черновой миссии пользователя",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Missions"
+                ],
+                "summary": "Удаление образца из последней черновой миссии",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор образца",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Информация о миссии и образцах",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка запроса",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/mission/status_by_moderator/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "JwtAuth": []
+                    }
+                ],
+                "description": "Обновляет статус миссии по её идентификатору",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Missions"
+                ],
+                "summary": "Обновление статуса миссии модератором",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор миссии",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Данные для обновления статуса миссии",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/classes.UpdateMissionStatus"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Статус миссии успешно изменен",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка запроса",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/mission/status_by_user/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "JwtAuth": []
+                    }
+                ],
+                "description": "Обновляет статус миссии по её идентификатору",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Missions"
+                ],
+                "summary": "Обновление статуса миссии пользователем",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор миссии",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Данные для обновления статуса миссии",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/classes.UpdateMissionStatus"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Статус миссии успешно изменен",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка запроса",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/mission/update/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "JwtAuth": []
+                    }
+                ],
+                "description": "Обновление данных миссии по её идентификатору",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Missions"
+                ],
+                "summary": "Обновление информации о миссии",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор миссии",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Данные для редактирования миссии",
+                        "name": "missionData",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/classes.UpdateMission"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Миссия успешно обновлена",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Ошибка запроса",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/mission/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "JwtAuth": []
+                    }
+                ],
+                "description": "Получение информации о миссии и связанных образцах",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Missions"
+                ],
+                "summary": "Получение деталей миссии по идентификатору",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор миссии",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Детали миссии и образцы",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sample": {
+            "get": {
+                "description": "Получение списка образцов с возможностью фильтрации по имени и/или типу горной породы",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Samples"
+                ],
+                "summary": "Получение списка образцов с фильтрацией по имени и типу горной породы",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Фильтр по имени образца",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Фильтр по типу горной породы",
+                        "name": "rockType",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список образцов",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ds.Samples"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sample/create": {
+            "post": {
+                "security": [
+                    {
+                        "User_id": []
+                    },
+                    {
+                        "JwtAuth": []
+                    }
+                ],
+                "description": "Создание нового образца с указанными данными",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Samples"
+                ],
+                "summary": "Создание образца",
+                "parameters": [
+                    {
+                        "description": "Данные для создания образца",
+                        "name": "sampleData",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ds.Samples"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Образец успешно создан",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос или ошибка создания образца",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sample/delete/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "JwtAuth": []
+                    }
+                ],
+                "description": "Удаление образца с указанным идентификатором пользователя и ID образца",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Samples"
+                ],
+                "summary": "Удаление образца по ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор образца",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Образец успешно удален",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос или ошибка удаления образца",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sample/to_mission/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "JwtAuth": []
+                    }
+                ],
+                "description": "Добавление образца в последнюю миссию с Mission_status \"Draft\"",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Samples"
+                ],
+                "summary": "Добавление образца в миссию",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор образца",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Образец успешно добавлен в миссию",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос или ошибка добавления образца в миссию",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Неавторизованный запрос",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sample/update/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "JwtAuth": []
+                    }
+                ],
+                "description": "Обновление данных образца с указанным идентификатором пользователя и ID образца",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Samples"
+                ],
+                "summary": "Обновление образца",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор образца",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Данные для обновления образца",
+                        "name": "sampleData",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/classes.Sample_Update"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Образец успешно обновлен",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос или ошибка обновления образца",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sample/{id}": {
+            "get": {
+                "description": "Получение информации о конкретном образце по его идентификатору",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Samples"
+                ],
+                "summary": "Получение образца по ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор образца",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Информация об образце",
+                        "schema": {
+                            "$ref": "#/definitions/ds.Samples"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос или ошибка получения образца",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sample/{id}/image": {
+            "post": {
+                "security": [
+                    {
+                        "JwtAuth": []
+                    }
+                ],
+                "description": "Загружает изображение и добавляет его к указанному образцу",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Samples"
+                ],
+                "summary": "Добавление изображения к образцу",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Идентификатор образца",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Изображение для загрузки",
+                        "name": "image",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Изображение усспешно загружено",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос или ошибка загрузки изображения",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Неавторизованный запрос",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/login": {
+            "post": {
+                "description": "Аутентификация пользователя и генерация JWT-токена",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Вход пользователя",
+                "parameters": [
+                    {
+                        "description": "Данные пользователя для входа",
+                        "name": "userJSON",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/classes.Login"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JWT-токен успешно сгенерирован",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос или ошибка аутентификации",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/register": {
+            "post": {
+                "description": "Регистрация нового пользователя в системе",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Регистрация нового пользователя",
+                "parameters": [
+                    {
+                        "description": "Данные нового пользователя",
+                        "name": "userJSON",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ds.Users"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Пользователь успешно зарегистрирован",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Неверный запрос или ошибка регистрации пользователя",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "classes.Login": {
+            "type": "object",
+            "properties": {
+                "Email_address": {
+                    "type": "string"
+                },
+                "Password": {
+                    "type": "string"
+                }
+            }
+        },
+        "classes.Sample_Update": {
+            "type": "object",
+            "properties": {
+                "Current_Location": {
+                    "type": "string"
+                },
+                "Name": {
+                    "type": "string"
+                },
+                "Rock_Type": {
+                    "type": "string"
+                },
+                "Sample_status": {
+                    "type": "string"
+                },
+                "Type": {
+                    "type": "string"
+                }
+            }
+        },
+        "classes.UpdateMission": {
+            "type": "object",
+            "properties": {
+                "Completion_date": {
+                    "type": "string"
+                },
+                "Formation_date": {
+                    "type": "string"
+                },
+                "Name": {
+                    "type": "string"
+                }
+            }
+        },
+        "classes.UpdateMissionStatus": {
+            "type": "object",
+            "properties": {
+                "Mission_status": {
+                    "type": "string"
+                }
+            }
+        },
+        "ds.Samples": {
+            "type": "object",
+            "properties": {
+                "Current_Location": {
+                    "type": "string"
+                },
+                "Date_Sealed": {
+                    "type": "string"
+                },
+                "Height": {
+                    "type": "string"
+                },
+                "Id_sample": {
+                    "type": "integer"
+                },
+                "Image": {
+                    "type": "string"
+                },
+                "Name": {
+                    "type": "string"
+                },
+                "Rock_Type": {
+                    "type": "string"
+                },
+                "Sample_status": {
+                    "type": "string"
+                },
+                "Sol_Sealed": {
+                    "type": "integer"
+                },
+                "Type": {
+                    "type": "string"
+                },
+                "Video": {
+                    "type": "string"
+                }
+            }
+        },
+        "ds.Users": {
+            "type": "object",
+            "properties": {
+                "Email_address": {
+                    "type": "string"
+                },
+                "Id_user": {
+                    "type": "integer"
+                },
+                "Name": {
+                    "type": "string"
+                },
+                "Password": {
+                    "type": "string"
+                },
+                "Phone_number": {
+                    "type": "string"
+                },
+                "RepeatPassword": {
+                    "type": "string"
+                },
+                "Role": {
+                    "type": "string"
+                },
+                "User_status": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "JwtAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
+    }
+}

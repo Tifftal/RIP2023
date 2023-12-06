@@ -39,15 +39,6 @@ func (repository *Repository) GetAllSamples(name, rockType string) ([]ds.Samples
 	return sample, err
 }
 
-// func (repository *Repository) GetSampleByName(name string) ([]ds.Samples, error) {
-// 	var samples []ds.Samples
-// 	err := repository.db.Where("Name LIKE ?", "%"+name+"%").Order("Sample_status ASC").Order("Id_sample ASC").Find(&samples).Error
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return samples, nil
-// }
-
 func (r *Repository) DeleteSampleByID(id, user_id int) error {
 	// Получаем информацию о пользователе по user_id
 	var user ds.Users
@@ -113,18 +104,24 @@ func (r *Repository) AddSampleToLastDraftMission(sampleID int, user_id int) (*ds
 	// Если миссии с mission_status = "Draft" нет, создаем новую
 	if errors.Is(dbErr, gorm.ErrRecordNotFound) {
 		currentTime := time.Now()
+		moderatorID, err := r.getRandomModeratorID()
+		if err != nil {
+			return nil, nil, err
+		}
 		lastDraftMission = ds.Missions{
-			User_id:        user_id,
-			Moderator_id:   2,
-			Mission_status: "Draft",
-			Name:           "NewDraftMission",
-			Creation_date:  currentTime,
-			Formation_date: currentTime,
+			User_id:         user_id,
+			Moderator_id:    moderatorID,
+			Mission_status:  "Draft",
+			Name:            "NewDraftMission",
+			Creation_date:   &currentTime,
+			Formation_date:  nil,
+			Completion_date: nil,
 		}
 		if err := r.db.Create(&lastDraftMission).Error; err != nil {
 			return nil, nil, err
 		}
 	}
+
 	// Получаем образец из базы данных по его идентификатору
 	var newSample ds.Samples
 	if err := r.db.First(&newSample, sampleID).Error; err != nil {
@@ -165,47 +162,13 @@ func (r *Repository) AddSampleToLastDraftMission(sampleID int, user_id int) (*ds
 
 }
 
-// func (repository *Repository) GetAllSamplesOrderByType() ([]ds.Samples, error) {
-// 	sample := []ds.Samples{}
-// 	err := repository.db.Order("Type ASC").Order("Id_sample ASC").Find(&sample).Error
-// 	if err != nil {
-// 		return nil, err
-// 	}
+func (r *Repository) AddSampleImage(id int, imageBytes []byte, contentType string, user_id int) error {
+	var user ds.Users
+	err := r.db.Table("users").Where("Id_user = ? AND Role = 'Moderator'", user_id).First(&user).Error
+	if err != nil {
+		return errors.New("Недостаточно прав для редактирования образца")
+	}
 
-// 	return sample, nil
-// }
-
-// func (repository *Repository) GetAllSamplesOrderByDate() ([]ds.Samples, error) {
-// 	sample := []ds.Samples{}
-// 	err := repository.db.Order("Date_Sealed ASC").Order("Id_sample ASC").Find(&sample).Error
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return sample, nil
-// }
-
-// func (repository *Repository) GetAllSamplesStatusActive() ([]ds.Samples, error) {
-// 	sample := []ds.Samples{}
-// 	err := repository.db.Where("sample_status='Active'").Order("Id_sample ASC").Find(&sample).Error
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return sample, nil
-// }
-
-// func (repository *Repository) GetAllSamplesStatusDeleted() ([]ds.Samples, error) {
-// 	sample := []ds.Samples{}
-// 	err := repository.db.Where("sample_status='Deleted'").Order("Id_sample ASC").Find(&sample).Error
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return sample, nil
-// }
-
-func (r *Repository) AddSampleImage(id int, imageBytes []byte, contentType string) error {
 	// Загрузка нового изображения в MinIO
 	imageURL, err := r.minio.UploadServiceImage(id, imageBytes, contentType)
 	if err != nil {
@@ -220,4 +183,13 @@ func (r *Repository) AddSampleImage(id int, imageBytes []byte, contentType strin
 	}
 
 	return nil
+}
+
+func (r *Repository) getRandomModeratorID() (int, error) {
+	var moderatorID int
+	err := r.db.Raw("SELECT id_user FROM users WHERE role = 'Moderator' ORDER BY RANDOM() LIMIT 1").Scan(&moderatorID).Error
+	if err != nil {
+		return 0, err
+	}
+	return moderatorID, nil
 }
