@@ -3,7 +3,6 @@ package delivery
 import (
 	"MSRM/internal/app/ds"
 	"MSRM/internal/app/repository"
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -21,18 +20,18 @@ import (
 // @Success 200 {object} []ds.Samples "Список образцов"
 // @Failure 500 {object} string "Внутренняя ошибка сервера"
 // @Router /api/sample [get]
-func GetAllSamples(repository *repository.Repository, c *gin.Context) {
+func GetAllSamples(repository *repository.Repository, c *gin.Context, user_id int) {
 	var sample []ds.Samples
 
 	name := c.DefaultQuery("name", "")
 	rockType := c.DefaultQuery("rockType", "")
 
-	sample, err := repository.GetAllSamples(name, rockType)
+	sample, draftMission_id, err := repository.GetAllSamples(name, rockType, user_id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
-	c.JSON(http.StatusOK, sample)
+	c.JSON(http.StatusOK, gin.H{"samples": sample, "draftMission_id": draftMission_id})
 }
 
 // @Summary Получение образца по ID
@@ -52,7 +51,6 @@ func GetSampleByID(repository *repository.Repository, c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
-	fmt.Println(id)
 
 	if id < 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -87,8 +85,6 @@ func CreateSample(repository *repository.Repository, c *gin.Context, user_id int
 		return
 	}
 
-	fmt.Println(sample)
-
 	if sample.Name == "" || sample.Type == "" || sample.Sol_Sealed == 0 || sample.Current_Location == "" || sample.Sample_status == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Ошибка, указаны неправильные данные для образца"})
 		return
@@ -118,7 +114,6 @@ func DeleteSampleByID(repository *repository.Repository, c *gin.Context, user_id
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
-	fmt.Println(id)
 
 	if id < 0 {
 		c.JSON(http.StatusBadRequest, gin.H{

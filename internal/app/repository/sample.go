@@ -21,7 +21,28 @@ func (repository *Repository) GetSampleByID(id int) (*ds.Samples, error) {
 	return sample, nil
 }
 
-func (repository *Repository) GetAllSamples(name, rockType string) ([]ds.Samples, error) {
+func (repository *Repository) GetAllSamples(name, rockType string, user_id int) ([]ds.Samples, uint, error) {
+	var user ds.Users
+	var draftMission ds.Missions
+	var draftMission_id uint
+
+	if user_id != 0 {
+		err := repository.db.Table("users").Where("Id_user = ? AND Role = 'User'", user_id).First(&user).Error
+		if err != nil {
+			return nil, 0, errors.New("Пользователь неавторизован как обычный пользователь")
+		}
+
+		err = repository.db.Table("missions").Where("User_id = ? AND Mission_status = 'Draft'", user_id).First(&draftMission).Error
+		if err != nil {
+			fmt.Println("У пользователя нет миссии со статусом DRAFT")
+			draftMission_id = 0
+		}
+
+		draftMission_id = draftMission.Id_mission
+	} else {
+		draftMission_id = 0
+	}
+
 	name = "%" + name + "%"
 	rockType = "%" + rockType + "%"
 
@@ -36,7 +57,7 @@ func (repository *Repository) GetAllSamples(name, rockType string) ([]ds.Samples
 
 	err := query.Find(&sample).Error
 
-	return sample, err
+	return sample, draftMission_id, err
 }
 
 func (r *Repository) DeleteSampleByID(id, user_id int) error {
@@ -96,10 +117,8 @@ func (r *Repository) AddSampleToLastDraftMission(sampleID int, user_id int) (*ds
 		Error
 
 	if dbErr != nil && !errors.Is(dbErr, gorm.ErrRecordNotFound) {
-		fmt.Println("не вот тут")
 		return nil, nil, dbErr
 	}
-	fmt.Println(lastDraftMission)
 
 	// Если миссии с mission_status = "Draft" нет, создаем новую
 	if errors.Is(dbErr, gorm.ErrRecordNotFound) {
@@ -154,7 +173,6 @@ func (r *Repository) AddSampleToLastDraftMission(sampleID int, user_id int) (*ds
 		Error
 
 	if addErr != nil {
-		fmt.Println("вот тут ошибка")
 		return nil, nil, addErr
 	}
 

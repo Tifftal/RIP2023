@@ -16,6 +16,5 @@ func FromEnv() string {
 	pass := os.Getenv("DB_PASS")
 	dbname := os.Getenv("DB_NAME")
 
-	fmt.Println(fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, pass, dbname))
 	return fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, pass, dbname)
 }

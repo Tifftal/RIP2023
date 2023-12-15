@@ -4,11 +4,13 @@ import (
 	"MSRM/internal/app/ds"
 	"MSRM/internal/app/pkg"
 	"MSRM/internal/app/repository"
-	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 )
 
 func DeleteUserByID(repository *repository.Repository, c *gin.Context) {
@@ -17,7 +19,6 @@ func DeleteUserByID(repository *repository.Repository, c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
-	fmt.Println(id)
 
 	if id < 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -44,7 +45,6 @@ func EditUser(repository *repository.Repository, c *gin.Context) {
 	Name, nameOk := jsonData["Name"].(string)
 	Status, statusOk := jsonData["User_status"].(string)
 
-	fmt.Println(Id_user, Name, Status)
 	if !idOk || Id_user <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or missing Id_user"})
 		return
@@ -156,6 +156,16 @@ func Login(repository *repository.Repository, c *gin.Context) {
 		return
 	}
 
+	if userJSON.Email_address == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Пустое поле"})
+		return
+	}
+
+	if userJSON.Password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Пустое поле"})
+		return
+	}
+
 	candidate, err := repository.GetUserByEmail(userJSON.Email_address)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -179,4 +189,44 @@ func Login(repository *repository.Repository, c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, token)
+}
+
+// @Summary Logout
+// @Description Logout user and add the JWT token to the blacklist
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Security JwtAuth
+// @Success 200 {string} string "OK"
+// @Failure 400 {string} string "Bad Request"
+// @Failure 401 {string} string "Unauthorized"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /user/logout [post]
+func Logout(repository *repository.Repository, c *gin.Context) {
+	jwtStr := c.GetHeader("Authorization")
+	if !strings.HasPrefix(jwtStr, "Bearer ") {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	jwtStr = jwtStr[len("Bearer "):]
+
+	_, err := jwt.Parse(jwtStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte("SuperSecretKey"), nil
+	})
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	user_idFloat64 := c.MustGet("User_id").(int)
+	user_id := uint(user_idFloat64)
+
+	err = repository.AddTokenToBlacklist(user_id, jwtStr, time.Hour)
+	if err != nil {
+		c.AbortWithStatus(http.StatusBadRequest)
+		return
+	}
+
+	c.Status(http.StatusOK)
 }

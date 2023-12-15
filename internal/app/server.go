@@ -5,7 +5,6 @@ import (
 	"MSRM/internal/app/delivery"
 	"MSRM/internal/app/pkg"
 	"log"
-	"net/http"
 
 	swaggerFiles "github.com/swaggo/files"     // swagger embed files
 	ginSwagger "github.com/swaggo/gin-swagger" // gin-swagger middleware
@@ -45,29 +44,28 @@ func (a *Application) StartServer() {
 			delivery.Login(a.repository, c)
 		})
 
-		user.GET("/protected", a.RoleMiddleware(pkg.Moderator), func(c *gin.Context) {
-			userID := c.MustGet("User_id").(int)
-			c.JSON(http.StatusOK, gin.H{"message": "Пользователь авторизирован как модератор", "userID": userID})
+		user.POST("/logout", a.RoleMiddleware(pkg.Moderator, pkg.User), func(c *gin.Context) {
+			delivery.Logout(a.repository, c)
 		})
 	}
 
 	api := router.Group("/api")
 	{
 
-		user := api.Group("/user")
-		{
-			user.DELETE("/delete_user/:id", func(c *gin.Context) {
-				delivery.DeleteUserByID(a.repository, c)
-			})
+		// user := api.Group("/user")
+		// {
+		// 	user.DELETE("/delete_user/:id", func(c *gin.Context) {
+		// 		delivery.DeleteUserByID(a.repository, c)
+		// 	})
 
-			user.PUT("edit_info", func(c *gin.Context) {
-				delivery.EditUser(a.repository, c)
-			})
+		// 	user.PUT("edit_info", func(c *gin.Context) {
+		// 		delivery.EditUser(a.repository, c)
+		// 	})
 
-			user.GET("get_user_by_role/:role", func(c *gin.Context) {
-				delivery.GetUserByRole(a.repository, c)
-			})
-		}
+		// 	user.GET("get_user_by_role/:role", func(c *gin.Context) {
+		// 		delivery.GetUserByRole(a.repository, c)
+		// 	})
+		// }
 
 		mission := api.Group("/mission")
 		{
@@ -86,10 +84,10 @@ func (a *Application) StartServer() {
 				delivery.UpdateMission(a.repository, c, user_id)
 			})
 
-			mission.DELETE("/delete/:id", a.RoleMiddleware(pkg.User), func(c *gin.Context) {
-				user_id := c.MustGet("User_id").(int)
-				delivery.DeleteMissionByID(a.repository, c, user_id)
-			})
+			// mission.DELETE("/delete/:id", a.RoleMiddleware(pkg.User), func(c *gin.Context) {
+			// 	user_id := c.MustGet("User_id").(int)
+			// 	delivery.DeleteMissionByID(a.repository, c, user_id)
+			// })
 
 			mission.DELETE("/delete_from_last/:id", a.RoleMiddleware(pkg.User), func(c *gin.Context) {
 				user_id := c.MustGet("User_id").(int)
@@ -123,8 +121,9 @@ func (a *Application) StartServer() {
 				delivery.DeleteSampleByID(a.repository, c, user_id)
 			})
 
-			sample.GET("/", func(c *gin.Context) {
-				delivery.GetAllSamples(a.repository, c)
+			sample.GET("/", a.Guest(pkg.User), func(c *gin.Context) {
+				user_id := c.MustGet("User_id").(int)
+				delivery.GetAllSamples(a.repository, c, user_id)
 			})
 
 			sample.PUT("/update/:id", a.RoleMiddleware(pkg.Moderator), func(c *gin.Context) {

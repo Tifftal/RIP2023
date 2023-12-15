@@ -120,7 +120,6 @@ func DeleteMissionByID(repository *repository.Repository, c *gin.Context, user_i
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
-	fmt.Println(id)
 
 	if id < 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -190,8 +189,6 @@ func UpdateMission(repository *repository.Repository, c *gin.Context, user_id in
 			candidate.Completion_date = &parsedTime
 		}
 	}
-
-	fmt.Println(candidate)
 
 	err = repository.UpdateMission(candidate, id, user_id)
 	if err != nil {

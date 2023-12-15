@@ -2,10 +2,12 @@ package repository
 
 import (
 	"MSRM/internal/app/ds"
-	"fmt"
+	"context"
 	"strconv"
 	"time"
 )
+
+const blacklistPrefix = "jwt_blacklist."
 
 func (r *Repository) DeleteUserByID(id int) error {
 	if err := r.db.Exec("UPDATE users SET user_status='Deleted' WHERE Id_user= ?", id).Error; err != nil {
@@ -64,8 +66,22 @@ func (r *Repository) SaveJWTToken(id uint, token string) error {
 
 	err := r.rd.Set(idStr, token, expiration).Err()
 	if err != nil {
-		fmt.Println("Тут")
 		return err
 	}
 	return nil
+}
+
+func (r *Repository) AddTokenToBlacklist(id uint, token string, expiration time.Duration) error {
+	// Генерируем уникальный ключ для токена в блеклисте
+	blacklistKey := blacklistPrefix + token
+	idStr := strconv.FormatUint(uint64(id), 10)
+
+	return r.rd.Set(idStr, blacklistKey, expiration).Err()
+}
+
+func (r *Repository) IsTokenBlacklisted(ctx context.Context, token string) error {
+	// Проверяем наличие токена в блеклисте
+	blacklistKey := blacklistPrefix + token
+
+	return r.rd.Get(blacklistKey).Err()
 }

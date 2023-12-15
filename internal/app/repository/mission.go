@@ -180,7 +180,10 @@ func (r *Repository) UpdateMissionStatusByUser(id int, newStatus string, user_id
 	// Обновляем статус миссии
 	updateErr := r.db.Model(&ds.Missions{}).
 		Where("Id_mission = ? AND user_id = ?", id, user_id).
-		Update("mission_status", newStatus).
+		Updates(map[string]interface{}{
+			"mission_status": newStatus,
+			"formation_date": time.Now(),
+		}).
 		Error
 
 	return updateErr
@@ -227,10 +230,17 @@ func (r *Repository) UpdateMissionStatusByModerator(id int, newStatus string, us
 		return errors.New("Неправильный статус миссии")
 	}
 
-	// Обновляем статус миссии
+	updateFields := map[string]interface{}{
+		"mission_status": newStatus,
+	}
+
+	if newStatus == "Completed" {
+		updateFields["completion_date"] = time.Now()
+	}
+
 	updateErr := r.db.Model(&ds.Missions{}).
 		Where("Id_mission = ? AND moderator_id = ?", id, user_id).
-		Update("mission_status", newStatus).
+		Updates(updateFields).
 		Error
 
 	return updateErr

@@ -560,6 +560,35 @@ paths:
       summary: Вход пользователя
       tags:
       - Users
+  /user/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout user and add the JWT token to the blacklist
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "401":
+          description: Unauthorized
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      security:
+      - JwtAuth: []
+      summary: Logout
+      tags:
+      - Users
   /user/register:
     post:
       consumes:
