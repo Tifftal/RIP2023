@@ -37,7 +37,6 @@ func (repository *Repository) GetAllSamples(name, rockType string, user_id int) 
 			fmt.Println("У пользователя нет миссии со статусом DRAFT")
 			draftMission_id = 0
 		}
-
 		draftMission_id = draftMission.Id_mission
 	} else {
 		draftMission_id = 0
@@ -55,6 +54,7 @@ func (repository *Repository) GetAllSamples(name, rockType string, user_id int) 
 		query = query.Where(`LOWER("rock_type") LIKE LOWER(?)`, rockType)
 	}
 
+	query = query.Order("Id_sample ASC")
 	err := query.Find(&sample).Error
 
 	return sample, draftMission_id, err
@@ -76,17 +76,17 @@ func (r *Repository) DeleteSampleByID(id, user_id int) error {
 	return nil
 }
 
-func (r *Repository) CreateSample(sample *ds.Samples, user_id int) error {
+func (r *Repository) CreateSample(sample *ds.Samples, user_id int) (uint, error) {
 	var user ds.Users
 	err := r.db.Table("users").Where("Id_user = ? AND Role = 'Moderator'", user_id).First(&user).Error
 	if err != nil {
-		return errors.New("Недостаточно прав для создания образца")
+		return 0, errors.New("Недостаточно прав для создания образца")
 	}
 
 	// Use a different variable name for the Create error
 	createErr := r.db.Create(&sample).Error
 
-	return createErr
+	return sample.Id_sample, createErr
 }
 
 func (r *Repository) UpdateSample(sample *ds.Samples, user_id int) error {

@@ -90,12 +90,13 @@ func CreateSample(repository *repository.Repository, c *gin.Context, user_id int
 		return
 	}
 
-	if err := repository.CreateSample(&sample, user_id); err != nil {
+	createdSampleID, err := repository.CreateSample(&sample, user_id)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Образец успешно создан!"})
+	c.JSON(http.StatusOK, gin.H{"message": "Образец успешно создан!", "id": createdSampleID})
 }
 
 // @Summary Удаление образца по ID

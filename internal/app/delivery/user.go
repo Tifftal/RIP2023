@@ -35,6 +35,32 @@ func DeleteUserByID(repository *repository.Repository, c *gin.Context) {
 	c.JSON(http.StatusOK, "Deleted!")
 }
 
+func GetUserByID(repository *repository.Repository, c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if id < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid user ID"})
+		return
+	}
+
+	user, err := repository.GetUserByID(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if user == nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "User not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
+}
+
 func EditUser(repository *repository.Repository, c *gin.Context) {
 	var jsonData map[string]interface{}
 	if err := c.BindJSON(&jsonData); err != nil {

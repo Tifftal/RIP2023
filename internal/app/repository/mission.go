@@ -3,58 +3,68 @@ package repository
 import (
 	"MSRM/internal/app/ds"
 	"errors"
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
 )
 
-func (repository *Repository) GetAllMissions(user_id int) ([]ds.Missions, error) {
-	missions := []ds.Missions{}
+func (repository *Repository) GetAllMissions(user_id int, missionStatus string) ([]ds.MissionWithUser, error) {
+	missions := []ds.MissionWithUser{}
+
 	var user ds.Users
-	err := repository.db.Table("users").Where("Id_user = ? AND (Role = 'Moderator' OR Role = 'User')", user_id).First(&user).Error
+	err := repository.db.Where("Id_user = ? AND (Role = 'Moderator' OR Role = 'User')", user_id).First(&user).Error
 	if err != nil {
-		return nil, errors.New("Недостаточно прав для просмотра миссии")
+		return nil, errors.New("Недостаточно прав для просмотра миссий")
 	}
 
-	if repository.db.Table("users").Where("Id_user = ? AND Role = 'User'", user_id).First(&user).RowsAffected > 0 {
-		err := repository.db.Where("user_id = ?", user_id).Order("formation_date ASC").Find(&missions).Error
-		if err != nil {
-			return nil, err
-		}
+	fmt.Println(missionStatus)
+
+	// Выполняем запрос для получения миссий с именем пользователя и фильтрацией по статусу
+	query := repository.db.Table("missions").
+		Joins("JOIN users ON missions.user_id = users.Id_user").
+		Select("missions.*, users.Name as User_name").
+		Where("missions.user_id = ? OR missions.moderator_id = ?", user_id, user_id).
+		Order("formation_date ASC")
+
+	if missionStatus != "" {
+		fmt.Println(missionStatus)
+		query = query.Where("missions.mission_status = ?", missionStatus)
 	}
 
-	if repository.db.Table("users").Where("Id_user = ? AND Role = 'Moderator'", user_id).First(&user).RowsAffected > 0 {
-		err := repository.db.Where("moderator_id = ?", user_id).Order("formation_date ASC").Find(&missions).Error
-		if err != nil {
-			return nil, err
-		}
+	query = query.Find(&missions)
+
+	if query.Error != nil {
+		return nil, query.Error
 	}
 
 	return missions, nil
 }
 
-func (repository *Repository) GetAllMissionsByDateRange(startDate, endDate time.Time, user_id int) ([]ds.Missions, error) {
-	missions := []ds.Missions{}
+func (repository *Repository) GetAllMissionsByDateRange(startDate, endDate time.Time, user_id int, missionStatus string) ([]ds.MissionWithUser, error) {
+	missions := []ds.MissionWithUser{}
+
 	var user ds.Users
-	err := repository.db.Table("users").Where("Id_user = ? AND (Role = 'Moderator' OR Role = 'User')", user_id).First(&user).Error
+	err := repository.db.Where("Id_user = ? AND (Role = 'Moderator' OR Role = 'User')", user_id).First(&user).Error
 	if err != nil {
-		return nil, errors.New("Недостаточно прав для просмотра миссии")
+		return nil, errors.New("Недостаточно прав для просмотра миссий")
 	}
 
-	// Для пользователя с ролью 'User'
-	if err := repository.db.Table("users").Where("Id_user = ? AND Role = 'User'", user_id).First(&user).Error; err == nil {
-		err := repository.db.Where("formation_date BETWEEN ? AND ? AND user_id = ?", startDate, endDate, user_id).Order("formation_date ASC").Find(&missions).Error
-		if err != nil {
-			return nil, err
-		}
+	query := repository.db.Table("missions").
+		Joins("JOIN users ON missions.user_id = users.Id_user").
+		Select("missions.*, users.Name as User_name").
+		Where("(missions.user_id = ? OR missions.moderator_id = ?) AND formation_date BETWEEN ? AND ?", user_id, user_id, startDate, endDate).
+		Order("formation_date ASC")
+
+	// Добавляем условие для фильтрации по статусу миссии, если оно указано
+	if missionStatus != "" {
+		query = query.Where("missions.mission_status = ?", missionStatus)
 	}
 
-	// Для пользователя с ролью 'Moderator'
-	if err := repository.db.Table("users").Where("Id_user = ? AND Role = 'Moderator'", user_id).First(&user).Error; err == nil {
-		err := repository.db.Where("formation_date BETWEEN ? AND ? AND moderator_id = ?", startDate, endDate, user_id).Order("formation_date ASC").Find(&missions).Error
-		if err != nil {
-			return nil, err
-		}
+	query = query.Find(&missions)
+
+	if query.Error != nil {
+		return nil, query.Error
 	}
 
 	return missions, nil

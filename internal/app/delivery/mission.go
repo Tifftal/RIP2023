@@ -23,9 +23,10 @@ import (
 // @Failure 500 {object} string "Внутренняя ошибка сервера"
 // @Router /api/mission/ [get]
 // @Security JwtAuth
-func GetAllMissiions(repository *repository.Repository, c *gin.Context, user_id int) {
+func GetAllMissions(repository *repository.Repository, c *gin.Context, user_id int) {
 	startDateString := c.Query("start_date")
 	endDateString := c.Query("end_date")
+	missionStatus := c.Query("mission_status")
 
 	var startDate, endDate time.Time
 	var err error
@@ -46,22 +47,35 @@ func GetAllMissiions(repository *repository.Repository, c *gin.Context, user_id 
 
 	// Если start_date и end_date не указаны, вызывайте функцию для получения всех миссий
 	if startDateString == "" && endDateString == "" {
-		mission, err := repository.GetAllMissions(user_id)
+		var missions []ds.MissionWithUser
+		var err error
+
+		// Если статус не указан, выводим все миссии без фильтрации по статусу
+		if missionStatus == "" {
+			missions, err = repository.GetAllMissions(user_id, "")
+		} else {
+			fmt.Println("HERE")
+			missions, err = repository.GetAllMissions(user_id, missionStatus)
+		}
+
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, mission)
+
+		response := gin.H{"missions": missions}
+		c.JSON(http.StatusOK, response)
 		return
 	}
 
-	// Иначе вызывайте функцию для получения миссий с фильтрацией по дате
-	mission, err := repository.GetAllMissionsByDateRange(startDate, endDate, user_id)
+	// Иначе вызывайте функцию для получения миссий с фильтрацией по дате и статусу
+	missions, err := repository.GetAllMissionsByDateRange(startDate, endDate, user_id, missionStatus)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, mission)
+	response := gin.H{"missions": missions}
+	c.JSON(http.StatusOK, response)
 }
 
 // @Summary Получение деталей миссии по идентификатору

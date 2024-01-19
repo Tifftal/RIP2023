@@ -2,6 +2,7 @@ package app
 
 import (
 	"MSRM/internal/app/pkg"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -15,6 +16,7 @@ func (a *Application) RoleMiddleware(aloowedRoles ...pkg.Roles) gin.HandlerFunc 
 	return func(c *gin.Context) {
 		tokenString := extractTokenFromHeader(c.Request)
 		if tokenString == "" {
+			fmt.Println("1")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return
 		}
@@ -24,18 +26,21 @@ func (a *Application) RoleMiddleware(aloowedRoles ...pkg.Roles) gin.HandlerFunc 
 		})
 
 		if err != nil || !token.Valid {
+			fmt.Println("2")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
+			fmt.Println("3")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return
 		}
 
 		userID, ok := claims["user_Id"].(float64)
 		if !ok {
+			fmt.Println("4")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return
 		}
@@ -44,6 +49,7 @@ func (a *Application) RoleMiddleware(aloowedRoles ...pkg.Roles) gin.HandlerFunc 
 
 		userRole, ok := claims["role"].(string)
 		if !ok {
+			fmt.Println("5")
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 			return
 		}
@@ -94,7 +100,6 @@ func (a *Application) Guest(allowedRoles ...pkg.Roles) gin.HandlerFunc {
 		}
 
 		if !isRoleAllowed(string(userRole), allowedRoles) {
-			// Переместил установку внутрь условия
 			c.Set("User_id", int(0))
 			return
 		}

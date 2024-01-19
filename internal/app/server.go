@@ -47,6 +47,10 @@ func (a *Application) StartServer() {
 		user.POST("/logout", a.RoleMiddleware(pkg.Moderator, pkg.User), func(c *gin.Context) {
 			delivery.Logout(a.repository, c)
 		})
+
+		user.GET("/:id", func(c *gin.Context) {
+			delivery.GetUserByID(a.repository, c)
+		})
 	}
 
 	api := router.Group("/api")
@@ -71,7 +75,7 @@ func (a *Application) StartServer() {
 		{
 			mission.GET("/", a.RoleMiddleware(pkg.Moderator, pkg.User), func(c *gin.Context) {
 				user_id := c.MustGet("User_id").(int)
-				delivery.GetAllMissiions(a.repository, c, user_id)
+				delivery.GetAllMissions(a.repository, c, user_id)
 			})
 
 			mission.GET("/:id", a.RoleMiddleware(pkg.Moderator, pkg.User), func(c *gin.Context) {
@@ -125,6 +129,11 @@ func (a *Application) StartServer() {
 				user_id := c.MustGet("User_id").(int)
 				delivery.GetAllSamples(a.repository, c, user_id)
 			})
+
+			// sample.GET("/", func(c *gin.Context) {
+			// 	// user_id := c.MustGet("User_id").(int)
+			// 	delivery.GetAllSamples(a.repository, c, 0)
+			// })
 
 			sample.PUT("/update/:id", a.RoleMiddleware(pkg.Moderator), func(c *gin.Context) {
 				user_id := c.MustGet("User_id").(int)
